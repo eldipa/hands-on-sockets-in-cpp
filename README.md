@@ -55,6 +55,46 @@ corriendo:
 pip install byexample
 ```
 
+## Name Resolver
+
+`resolve_name` recibe un hostname y resuelve via `getaddrinfo` la
+dirección IPv4.
+
+```shell
+$ ./resolve_name localhost
+IPv4: 127.0.0.1<...>
+```
+
+Acepta opcionalmente el nombre de un servicio que resuelve a un puerto
+TCP.
+
+```shell
+$ ./resolve_name localhost http
+IPv4: 127.0.0.1 (port 80)<...>
+```
+
+`getaddrinfo`, y por ende `resolve_name` aceptan direcciones IP y
+puertos:
+
+```shell
+$ ./resolve_name 8.8.8.8 53
+IPv4: 8.8.8.8 (port 53)<...>
+```
+
+Nombres inválidos o que no puedan resolverse por alguna falla
+en la red (DNS) terminan en error:
+
+```shell
+$ ./resolve_name 127.0.0.1 esto-no-es-un-servicio
+Host/service name resolution failed (getaddrinfo): <...>
+```
+
+`getaddrinfo` soporta perfectamente tanto IPv4 como IPv6,
+asi como otros protocoles ademas de TCP como UDP.
+
+Sin embargo `resolve_name` no tiene dicho soporte: se lo deja
+al lector como challenge.
+
 ## Licencia
 
 GPL v2
