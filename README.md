@@ -95,6 +95,28 @@ asi como otros protocoles ademas de TCP como UDP.
 Sin embargo `resolve_name` no tiene dicho soporte: se lo deja
 al lector como challenge.
 
+## Cliente HTTP
+
+`client_http` es un mini cliente HTTP que se conecta a un servidor
+(`www.google.com.ar`), le pide una página web y la imprime por pantalla.
+
+```shell
+$ ./client_http
+Sent 75 bytes
+Page:
+HTTP/1.1 200 OK<...>
+```
+
+`client_http` es extraordinariamente simple y por lo tanto tiene varios
+puntos a desarrollar.
+
+Como challenges podes:
+
+ - recibir por línea de comandos que página web obtener y de que server
+(otro que no sea `www.google.com.ar`). (challenge fácil)
+ - darle soporte a HTTPS (challenge difícil, requiere usar alguna lib)
+ - darle soporte a HTTP/3 (challenge difícil, requiere usar alguna lib)
+
 ## Licencia
 
 GPL v2
