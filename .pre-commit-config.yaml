@@ -1,0 +1,18 @@
+---
+repos:
+  - repo: https://github.com/cpplint/cpplint
+    rev: 1.6.0
+    hooks:
+      - id: cpplint
+        # El estilo por default de Google es un poco restrictivo.
+        # Con --filter le decimos que no queremos ningun estilo
+        # por default y solo aquellos que le indiquemos.
+        args: ["--filter=-,+build/class,+build/deprecated,+build/include_what_you_use,+build/namespaces,+build/printf_format,+readability/braces,+readability/check,+readability/fn_size,+readability/function,+readabil
+ity/multiline_comment,+readability/multiline_string,+readability/utf8,+runtime/arrays,+runtime/casting,+runtime/explicit,+runtime/init,+runtime/invalid_increment,+runtime/memset,+runtime/oper
+ator,+runtime/printf,+runtime/printf_format,+runtime/rtti,+runtime/string,+whitespace/blank_line,+whitespace/empty_loop_body,+whitespace/ending_newline,+whitespace/line_length,+whitespace/new
+line,+whitespace/parens,+whitespace/semicolon"]
+  - repo: https://github.com/pocc/pre-commit-hooks
+    rev: 9a9bbc00895bbdb7670231c2565d4f1309c42905  # SHA of v1.3.5
+    hooks:
+      - id: cppcheck
+        args: ["--enable=warning,style,information", "--language=c++", "--std=c++17", "--error-exitcode=1"]
