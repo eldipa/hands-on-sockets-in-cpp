@@ -64,7 +64,6 @@ Socket::Socket(
          * */
         this->closed = false;
         this->skt = skt;
-        resolver.deinit();
         return;
     }
 
@@ -86,7 +85,6 @@ Socket::Socket(
     if (skt != -1)
         ::close(skt);
 
-    resolver.deinit();
     throw -1;
 }
 
@@ -175,7 +173,6 @@ Socket::Socket(const char *servname) {
          * */
         this->closed = false;
         this->skt = skt;
-        resolver.deinit();
         return;
     }
 
@@ -185,7 +182,6 @@ Socket::Socket(const char *servname) {
     if (skt != -1)
         ::close(skt);
 
-    resolver.deinit();
     throw -1;
 }
 
@@ -392,7 +388,7 @@ int Socket::close() {
     return ::close(this->skt);
 }
 
-void Socket::deinit() {
+Socket::~Socket() {
     if (not this->closed) {
         ::shutdown(this->skt, 2);
         ::close(this->skt);

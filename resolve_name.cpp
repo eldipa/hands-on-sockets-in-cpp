@@ -89,11 +89,5 @@ int main(int argc, char *argv[]) {
             printf("IPv4: %s\n", inet_ntoa(internet_addr));
     }
 
-    /*
-     * Llamamos al des-inicializador del TDA para la correcta
-     * liberación de los recursos.
-     * */
-    resolver.deinit();
-
     return 0;
 }

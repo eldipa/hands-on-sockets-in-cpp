@@ -48,6 +48,6 @@ struct addrinfo* next();
 /*
  * Libera los recursos.
  * */
-void deinit();
+~Resolver();
 };
 #endif

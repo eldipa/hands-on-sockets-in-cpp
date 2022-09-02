@@ -116,7 +116,7 @@ struct addrinfo* Resolver::next() {
     return ret;
 }
 
-void Resolver::deinit() {
+Resolver::~Resolver() {
     /*
      * `getaddrinfo` reservó recursos en algún lado (posiblemente el heap).
      * Es nuestra obligación liberar dichos recursos cuando no los necesitamos

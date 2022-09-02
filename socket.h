@@ -130,11 +130,11 @@ int shutdown(int how);
 int close();
 
 /*
- * Desinicializa el socket. Si aun esta conectado,
+ * Destruye el socket. Si aun esta conectado,
  * se llamara a `Socket::shutdown` y `Socket::close`
  * automáticamente.
  * */
-void deinit();
+~Socket();
 };
 #endif
 

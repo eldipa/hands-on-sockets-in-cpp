@@ -73,13 +73,13 @@ int main(int argc, char *argv[]) {
          * marca un error.
          * */
         printf("The connection was closed by the other end.\n");
-        goto connection_closed;
+        return ret;
     }
 
     assert(s != 0);
     if (s == -1) {
         perror("socket send failed");
-        goto send_failed;
+        return ret;
     }
 
     /*
@@ -126,7 +126,7 @@ int main(int argc, char *argv[]) {
              * 99% casi seguro que es un error
              * */
             perror("socket recv failed");
-            goto recv_failed;
+            return ret;
         }
 
         /*
@@ -146,23 +146,7 @@ int main(int argc, char *argv[]) {
      * Si llegamos hasta acá es por que no nos topamos con ningún error
      * por lo tanto return-code de esta función (y de este programa)
      * debe ser 0 (éxito).
-     *
-     * Si hubiéramos detectado algo error, nunca ejecutaríamos
-     * este código y main retornaría el valor de `ret` por default
-     * que es -1 (error).
      * */
     ret = 0;
-
-recv_failed:
-send_failed:
-connection_closed:
-    /*
-     * Liberamos los recursos.
-     *
-     * El TDA Socket que se implementó se encargará de
-     * hacer el shutdown y el close por nosotros.
-     * */
-    skt.deinit();
-
     return ret;
 }

@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
      * */
     s = srv.accept(&peer);
     if (s == -1)
-        goto accept_failed;
+        return ret;
 
     /*
      * A partir de aquí podríamos volver a usar `srv` para aceptar
@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
              * 99% casi seguro que es un error
              * */
             perror("socket recv failed");
-            goto recv_failed;
+            return ret;
         }
 
         s = peer.sendall(buf, sz, &was_closed);
@@ -109,56 +109,10 @@ int main(int argc, char *argv[]) {
 
         if (s == -1) {
             perror("socket send failed");
-            goto send_failed;
+            return ret;
         }
     }
 
     ret = 0;
-
-    /*
-     * Nótese el orden de los `goto` (labels) y de la liberación de cada
-     * recurso.
-     * El orden es exactamente el inverso a como se fueron reservando
-     * dichos recursos.
-     *
-     * Ambos forman un "stack":
-     *
-     *      ret = -1; // failure by default         Recursos
-     *
-     *      reservo A;                              [ )
-     *      if (fail)
-     *         goto reservar_A_failed;
-     *
-     *      reservo B;                              [ A )
-     *      if (fail)
-     *         goto reservar_B_failed;
-     *
-     *      reservo C;                              [ A | B )
-     *      if (fail)
-     *         goto reservar_C_failed;
-     *
-     *      ...                                     [ A | B | C )
-     *
-     *      ret = 0; // exito
-     *
-     *      libero C;
-     *
-     *  reservar_C_failed:                          [ A | B )
-     *      libero B;
-     *
-     *  reservar_B_failed:                          [ A )
-     *      libero A;
-     *
-     *  reservar_A_failed:                          [ )
-     *      return ret;
-     *
-     * */
-send_failed:
-recv_failed:
-    peer.deinit();
-
-accept_failed:
-    srv.deinit();
-
     return ret;
 }
