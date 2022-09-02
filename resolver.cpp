@@ -10,7 +10,7 @@
 #include <netdb.h>
 #include <unistd.h>
 
-int resolver_t::init(
+int Resolver::init(
         const char* hostname,
         const char* servname,
         bool is_passive) {
@@ -107,17 +107,17 @@ int resolver_t::init(
     return 0;
 }
 
-bool resolver_t::has_next() {
+bool Resolver::has_next() {
     return this->_next != NULL;
 }
 
-struct addrinfo* resolver_t::next() {
+struct addrinfo* Resolver::next() {
     struct addrinfo *ret = this->_next;
     this->_next = ret->ai_next;
     return ret;
 }
 
-void resolver_t::deinit() {
+void Resolver::deinit() {
     /*
      * `getaddrinfo` reservó recursos en algún lado (posiblemente el heap).
      * Es nuestra obligación liberar dichos recursos cuando no los necesitamos

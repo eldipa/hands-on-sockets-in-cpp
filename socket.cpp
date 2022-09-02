@@ -12,10 +12,10 @@
 #include "socket.h"
 #include "resolver.h"
 
-int socket_t::init_for_connection(
+int Socket::init_for_connection(
         const char *hostname,
         const char *servname) {
-    class resolver_t resolver;
+    Resolver resolver;
     int s = resolver.init(hostname, servname, false);
     if (s == -1)
         return -1;
@@ -92,8 +92,8 @@ int socket_t::init_for_connection(
     return -1;
 }
 
-int socket_t::init_for_listen(const char *servname) {
-    class resolver_t resolver;
+int Socket::init_for_listen(const char *servname) {
+    Resolver resolver;
     int s = resolver.init(nullptr, servname, true);
     if (s == -1)
         return -1;
@@ -150,10 +150,10 @@ int socket_t::init_for_listen(const char *servname) {
 
         /*
          * Hacemos le bind: enlazamos el socket a una dirección local.
-         * A diferencia de lo que hacemos en `socket_t::init_for_connection`
+         * A diferencia de lo que hacemos en `Socket::init_for_connection`
          * que obtenemos una dirección de una máquina remota y nos conectamos
          * a ella, el resolver nos dará direcciones locales (véase el flag
-         * `is_passive` de `resolver_t`).
+         * `is_passive` de `Resolver`).
          *
          * Con `bind` asociaremos el socket a dicha dirección local
          * y con `listen` pondremos el socket a escuchar conexiones entrantes.
@@ -193,7 +193,7 @@ int socket_t::init_for_listen(const char *servname) {
     return -1;
 }
 
-int socket_t::recvsome(
+int Socket::recvsome(
         void *data,
         unsigned int sz,
         bool *was_closed) {
@@ -219,7 +219,7 @@ int socket_t::recvsome(
     }
 }
 
-int socket_t::sendsome(
+int Socket::sendsome(
         const void *data,
         unsigned int sz,
         bool *was_closed) {
@@ -252,7 +252,7 @@ int socket_t::sendsome(
          * */
         if (errno == EPIPE) {
             /*
-             * Puede o no ser un error (véase el comentario en `socket_t::recvsome`)
+             * Puede o no ser un error (véase el comentario en `Socket::recvsome`)
              * */
             *was_closed = true;
             return 0;
@@ -273,7 +273,7 @@ int socket_t::sendsome(
     }
 }
 
-int socket_t::recvall(
+int Socket::recvall(
         void *data,
         unsigned int sz,
         bool *was_closed) {
@@ -289,13 +289,13 @@ int socket_t::recvall(
         if (s <= 0) {
             /*
              * Si el socket fue cerrado (`s == 0`) o hubo un error (`s == -1`)
-             * `socket_t::recvsome` ya debería haber seteado `was_closed`
+             * `Socket::recvsome` ya debería haber seteado `was_closed`
              * y haber notificado el error.
              *
              * Nosotros podemos entonces meramente retornar
              *  - error (-1) si recibimos algunos bytes pero no todos los pedidos
-             *  - error (-1) si `socket_t::recvsome` falló con error.
-             *  - end of stream (0) si es lo q recibimos de `socket_t::recvsome`
+             *  - error (-1) si `Socket::recvsome` falló con error.
+             *  - end of stream (0) si es lo q recibimos de `Socket::recvsome`
              * */
             return (received ? -1 : s);
         } else {
@@ -311,7 +311,7 @@ int socket_t::recvall(
 }
 
 
-int socket_t::sendall(
+int Socket::sendall(
         const void *data,
         unsigned int sz,
         bool *was_closed) {
@@ -324,7 +324,7 @@ int socket_t::sendall(
                 sz - sent,
                 was_closed);
 
-        /* Véase los comentarios de `socket_t::recvall` */
+        /* Véase los comentarios de `Socket::recvall` */
         if (s <= 0) {
             return (sent ? -1 : s);
         } else {
@@ -335,14 +335,14 @@ int socket_t::sendall(
     return sz;
 }
 
-int socket_t::init_with_file_descriptor(class socket_t *peer, int skt) {
+int Socket::init_with_file_descriptor(Socket *peer, int skt) {
     peer->skt = skt;
     peer->closed = false;
 
     return 0;
 }
 
-int socket_t::accept(class socket_t *peer) {
+int Socket::accept(Socket *peer) {
     /*
      * `accept` nos bloqueara hasta que algún cliente se conecte a nosotros
      * y la conexión se establezca.
@@ -367,7 +367,7 @@ int socket_t::accept(class socket_t *peer) {
      * Por eso inicializamos el TDA `peer` con el nuevo file
      * descriptor.
      *
-     * Nota: `peer` debe ser un `socket_t` *sin inicializar*
+     * Nota: `peer` debe ser un `Socket` *sin inicializar*
      * para que seamos nosotros quienes lo inicializamos aquí.
      * */
     int s = init_with_file_descriptor(peer, peer_skt);
@@ -377,7 +377,7 @@ int socket_t::accept(class socket_t *peer) {
     return 0;
 }
 
-int socket_t::shutdown(int how) {
+int Socket::shutdown(int how) {
     if (::shutdown(this->skt, how) == -1) {
         perror("socket shutdown failed");
         return -1;
@@ -386,12 +386,12 @@ int socket_t::shutdown(int how) {
     return 0;
 }
 
-int socket_t::close() {
+int Socket::close() {
     this->closed = true;
     return ::close(this->skt);
 }
 
-void socket_t::deinit() {
+void Socket::deinit() {
     if (not this->closed) {
         ::shutdown(this->skt, 2);
         ::close(this->skt);

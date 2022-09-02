@@ -43,20 +43,20 @@ int main(int argc, char *argv[]) {
     }
 
     /*
-     * El TDA `resolver_t` se encargara de resolver el hostname/service name
+     * El TDA `Resolver` se encargara de resolver el hostname/service name
      * encapsulando todos los detalles que no nos interesan saber.
      *
      * En particular el TDA se encarga de realizar todos los chequeos de errores
      * por nosotros y retornar un único código que en C (así como en Golang)
      * tenemos que chequear nosotros.
      * */
-    class resolver_t resolver;
+    Resolver resolver;
     int s = resolver.init(hostname, servname, false);
     if (s == -1)
         return -1;
 
     /*
-     * Recorda que `resolver_t` te da una lista de direcciones
+     * Recorda que `Resolver` te da una lista de direcciones
      * (que vienen de `getaddrinfo`)
      *
      * Un mismo nombre puede resolverse a múltiples direcciones que

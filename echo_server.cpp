@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
      * uno para escuchar y aceptar y luego N sockets para sus
      * N clientes.
      * */
-    class socket_t peer, srv;
+    Socket peer, srv;
     s = srv.init_for_listen(servname);
     if (s == -1)
         goto listen_failed;
@@ -77,19 +77,19 @@ int main(int argc, char *argv[]) {
          * Loop principal: lo que el servidor recibe lo vuelve a enviar
          * al cliente. Es un *echo* server después de todo!
          *
-         * Usamos `socket_t::recvsome` por q no sabemos cuanto vamos a
-         * recibir exactamente pero usamos `socket_t::sendall` por
+         * Usamos `Socket::recvsome` por q no sabemos cuanto vamos a
+         * recibir exactamente pero usamos `Socket::sendall` por
          * que sabemos cuanto queremos enviar.
          *
-         * Podríamos usar también `socket_t::sendsome` para hacer
+         * Podríamos usar también `Socket::sendsome` para hacer
          * ciertas optimizaciones pero acá nos quedamos con la
          * version simple (y fácil de entender).
          * Si queres indagar más podes ver la implementación
          * de `tiburoncin` pero te advierto, es heavy.
          * https://github.com/eldipa/tiburoncin
          *
-         * Pregunta: por que usamos `sizeof(buf)` en este `socket_t::recvsome`
-         * pero usamos `sizeof(buf)-1` en el `socket_t::recvsome`
+         * Pregunta: por que usamos `sizeof(buf)` en este `Socket::recvsome`
+         * pero usamos `sizeof(buf)-1` en el `Socket::recvsome`
          * de `cliente_http.cpp`?
          * */
         int sz = peer.recvsome(buf, sizeof(buf), &was_closed);

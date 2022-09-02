@@ -42,19 +42,19 @@ int main(int argc, char *argv[]) {
     }
 
     /*
-     * El TDA `socket_t` se encargara de resolver el hostname/service name
+     * El TDA `Socket` se encargara de resolver el hostname/service name
      * y se conectará a dicho server via TCP/IP.
      * */
-    class socket_t skt;
+    Socket skt;
     s = skt.init_for_connection("www.google.com.ar", "http");
     if (s == -1)
         goto connection_failed;
 
     /*
      * Con el socket creado y conectado, ahora enviamos el request HTTP
-     * con `socket_t::sendall`.
+     * con `Socket::sendall`.
      *
-     * `socket_t::sendall` se encarga de llamar a `send` varias veces hasta
+     * `Socket::sendall` se encarga de llamar a `send` varias veces hasta
      * lograr enviar todo lo pedido o fallar.
      *
      * Esta es la manera de asegurarse el envío completo de los
@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
      * `recv` sufre de short-reads.
      *
      * Si quisiéramos bloquearnos hasta leer por completo la
-     * página web deberíamos llamar a `socket_t::recvall` que implementa
+     * página web deberíamos llamar a `Socket::recvall` que implementa
      * el loop y resuelve el short-read.
      *
      * Sin embargo, para que queremos leer toda la página
@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
      *
      * El short-read no es un bug, es un feature!
      *
-     * Por eso aquí usamos `socket_t::recvsome` y no `socket_t::recvall`.
+     * Por eso aquí usamos `Socket::recvsome` y no `Socket::recvall`.
      * */
     printf("Page:\n");
     while (not was_closed) {
@@ -162,7 +162,7 @@ connection_closed:
     /*
      * Liberamos los recursos.
      *
-     * El TDA socket_t que se implementó se encargará de
+     * El TDA Socket que se implementó se encargará de
      * hacer el shutdown y el close por nosotros.
      * */
     skt.deinit();

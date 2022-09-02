@@ -6,7 +6,7 @@
  * Por simplificación este TDA se enfocará solamente
  * en sockets IPv4 para TCP.
  * */
-class socket_t {
+class Socket {
     private:
     int skt;
     bool closed;
@@ -15,15 +15,15 @@ class socket_t {
      * Inicializa el socket pasándole directamente el file descriptor.
      *
      * No queremos que el código del usuario este manipulando el file descriptor,
-     * queremos q interactúe con él *solo* a través de `socket_t`.
+     * queremos q interactúe con él *solo* a través de `Socket`.
      * */
-    int init_with_file_descriptor(class socket_t *peer, int skt);
+    int init_with_file_descriptor(Socket *peer, int skt);
 
     public:
 /*
  * Inicializamos el socket tanto para conectarse a un servidor
- * (`socket_t::init_for_connection`) como para inicializarlo para ser usado
- * por un servidor (`socket_t::init_for_listen`).
+ * (`Socket::init_for_connection`) como para inicializarlo para ser usado
+ * por un servidor (`Socket::init_for_listen`).
  *
  * Muchas librerías de muchos lenguajes ofrecen una única formal de inicializar
  * los sockets y luego métodos (post-inicialización) para establecer
@@ -34,10 +34,10 @@ class socket_t {
  *
  * Este TDA va por ese lado.
  *
- * Para `socket_t::init_for_connection`,  <hostname>/<servname> es la dirección
+ * Para `Socket::init_for_connection`,  <hostname>/<servname> es la dirección
  * de la máquina remota a la cual se quiere conectar.
  *
- * Para `socket_t::init_for_listen`, buscara una dirección local válida
+ * Para `Socket::init_for_listen`, buscara una dirección local válida
  * para escuchar y aceptar conexiones automáticamente en el <servname> dado.
  *
  * Ambas funciones retornan 0 si se pudo conectar/poner en escucha
@@ -48,10 +48,10 @@ int init_for_connection(
         const char *servname);
 int init_for_listen(const char *servname);
 
-/* `socket_t::sendsome` lee hasta `sz` bytes del buffer y los envía. La función
+/* `Socket::sendsome` lee hasta `sz` bytes del buffer y los envía. La función
  * puede enviar menos bytes sin embargo.
  *
- * `socket_t::recvsome` por el otro lado recibe hasta `sz` bytes y los escribe
+ * `Socket::recvsome` por el otro lado recibe hasta `sz` bytes y los escribe
  * en el buffer (que debe estar pre-allocado). La función puede recibir
  * menos bytes sin embargo.
  *
@@ -73,8 +73,8 @@ int recvsome(
         bool *was_closed);
 
 /*
- * `socket_t::sendall` envía exactamente `sz` bytes leídos del buffer, ni más,
- * ni menos. `socket_t::recvall` recibe exactamente sz bytes.
+ * `Socket::sendall` envía exactamente `sz` bytes leídos del buffer, ni más,
+ * ni menos. `Socket::recvall` recibe exactamente sz bytes.
  *
  * Si hay un error se retorna -1.
  *
@@ -102,13 +102,13 @@ int recvall(
 /*
  * Acepta una conexión entrante e inicializa con ella el socket peer.
  *
- * Dicho socket peer debe estar *sin* inicializar y si `socket_t::accept` es
- * exitoso, se debe llamar a `socket_t::shutdown`, `socket_t::close` y
- * `socket_t::deinit` sobre él.
+ * Dicho socket peer debe estar *sin* inicializar y si `Socket::accept` es
+ * exitoso, se debe llamar a `Socket::shutdown`, `Socket::close` y
+ * `Socket::deinit` sobre él.
  *
  * Retorna -1 en caso de error, 0 de otro modo.
  * */
-int accept(class socket_t *peer);
+int accept(Socket *peer);
 
 /*
  * Cierra la conexión ya sea parcial o completamente.
@@ -124,7 +124,7 @@ int close();
 
 /*
  * Desinicializa el socket. Si aun esta conectado,
- * se llamara a `socket_t::shutdown` y `socket_t::close`
+ * se llamara a `Socket::shutdown` y `Socket::close`
  * automáticamente.
  * */
 void deinit();
