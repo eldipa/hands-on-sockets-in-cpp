@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
      * y se conectará a dicho server via TCP/IP.
      * */
     struct socket_t skt;
-    s = socket_init(&skt, "www.google.com.ar", "http");
+    s = socket_init_for_connection(&skt, "www.google.com.ar", "http");
     if (s == -1)
         return -1;
 

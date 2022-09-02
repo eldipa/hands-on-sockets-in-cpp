@@ -117,6 +117,44 @@ Como challenges podes:
  - darle soporte a HTTPS (challenge difícil, requiere usar alguna lib)
  - darle soporte a HTTP/3 (challenge difícil, requiere usar alguna lib)
 
+## Echo Server
+
+`echo_server` es un mini servidor que acepta una única conexión y todo
+lo que recibe de ella lo reenvía.
+
+En una consola podes levantar el server en background:
+
+```shell
+$ ./echo_server 8080  &
+[<job-id>] <pid>
+```
+
+Y luego enviar cosas con un `netcat`. Deberías ver que lo que envies se
+te retorna.
+
+<!--
+$ sleep 0.5
+-->
+
+```shell
+$ echo "hello world!" | nc 127.0.0.1 8080   # byexample: +stop-on-silence +stop-signal=interrupt
+hello world!
+```
+
+<!--
+$ kill -9 $(jobs -p) && wait        # byexample: +pass
+-->
+
+Tendrás que finalizar al `netcat` con un `ctrl-c` (interrupción)
+para que cierre la conexión y el server, al detectar el cierre, finalize.
+
+El servidor escucha en la primer dirección local libre. `getaddrinfo`
+permite seleccionar una dirección en particular y así poner el servidor
+a escuchar ahí. Se deja esto como challenge.
+
+También, el servidor solo acepta a un único cliente. Se deja como
+challenge darle soporte para múltiples clientes.
+
 ## Licencia
 
 GPL v2
@@ -131,3 +169,9 @@ que en el Trabajo Práctico pueden ser exigidos.
 
 En todo momento seras responsable ya que la inclusion parcial o total
 de este código y su uso es decisión tuya.
+
+<!--
+No debería ser necesario pero por si acaso matamos a todos los procesos
+lanzados durante la ejecución del README.md
+$ kill -9 $(jobs -p) && wait        # byexample: -skip +pass
+-->

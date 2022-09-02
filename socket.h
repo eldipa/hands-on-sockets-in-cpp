@@ -13,12 +13,33 @@ struct socket_t {
 
 /*
  * Inicializamos el socket tanto para conectarse a un servidor
+ * (`socket_init_for_connection`) como para inicializarlo para ser usado
+ * por un servidor (`socket_init_for_listen`).
  *
- * Retorna 0 en caso de éxito, -1 en caso de error.
+ * Muchas librerías de muchos lenguajes ofrecen una única formal de inicializar
+ * los sockets y luego métodos (post-inicialización) para establecer
+ * la conexión o ponerlo en escucha.
+ *
+ * Otras librerías/lenguajes van por tener una inicialización para
+ * el socket activo y otra para el pasivo.
+ *
+ * Este TDA va por ese lado.
+ *
+ * Para `socket_init_for_connection`,  <hostname>/<servname> es la dirección
+ * de la máquina remota a la cual se quiere conectar.
+ *
+ * Para `socket_init_for_listen`, buscara una dirección local válida
+ * para escuchar y aceptar conexiones automáticamente en el <servname> dado.
+ *
+ * Ambas funciones retornan 0 si se pudo conectar/poner en escucha
+ * o -1 en caso de error.
  * */
-int socket_init(
+int socket_init_for_connection(
         struct socket_t *self,
         const char *hostname,
+        const char *servname);
+int socket_init_for_listen(
+        struct socket_t *self,
         const char *servname);
 
 /* `socket_sendsome` lee hasta `sz` bytes del buffer y los envía. La función
@@ -75,6 +96,17 @@ int socket_recvall(
         void *data,
         unsigned int sz,
         bool *was_closed);
+
+/*
+ * Acepta una conexión entrante e inicializa con ella el socket peer.
+ *
+ * Dicho socket peer debe estar *sin* inicializar y si `socket_accept` es
+ * exitoso, se debe llamar a `socket_shutdown`, `socket_close` y
+ * `socket_deinit` sobre él.
+ *
+ * Retorna -1 en caso de error, 0 de otro modo.
+ * */
+int socket_accept(struct socket_t *self, struct socket_t *peer);
 
 /*
  * Cierra la conexión ya sea parcial o completamente.

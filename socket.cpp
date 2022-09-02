@@ -12,7 +12,7 @@
 #include "socket.h"
 #include "resolver.h"
 
-int socket_init(
+int socket_init_for_connection(
         struct socket_t *self,
         const char *hostname,
         const char *servname) {
@@ -81,6 +81,68 @@ int socket_init(
     return -1;
 }
 
+int socket_init_for_listen(
+        struct socket_t *self,
+        const char *servname
+        ) {
+    struct resolver_t resolver;
+    int s = resolver_init(&resolver, nullptr, servname, true);
+    if (s == -1)
+        return -1;
+
+    int skt = -1;
+    self->closed = true;
+    while (resolver_has_next(&resolver)) {
+        struct addrinfo *addr = resolver_next(&resolver);
+
+        if (skt != -1)
+            close(skt);
+
+        skt = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
+        if (skt == -1) {
+            continue;
+        }
+
+        /*
+         * Hacemos le bind: enlazamos el socket a una dirección local.
+         * A diferencia de lo que hacemos en `socket_init_for_connection`
+         * que obtenemos una dirección de una máquina remota y nos conectamos
+         * a ella, el resolver nos dará direcciones locales (véase el flag
+         * `is_passive` de `resolver_t`).
+         *
+         * Con `bind` asociaremos el socket a dicha dirección local
+         * y con `listen` pondremos el socket a escuchar conexiones entrantes.
+         * */
+        s = bind(skt, addr->ai_addr, addr->ai_addrlen);
+        if (s == -1) {
+            continue;
+        }
+
+        /*
+         * Ponemos el socket a escuchar. Ese 20 (podría ser otro valor)
+         * indica cuantas conexiones a la espera de ser aceptadas se toleraran
+         *
+         * No tiene nada q ver con cuantas conexiones totales el server tendrá.
+         * */
+        s = listen(skt, 20);
+        if (s == -1) {
+            continue;
+        }
+
+        /*
+         * Setup exitoso!
+         * */
+        self->closed = false;
+        self->skt = skt;
+        return 0;
+    }
+
+    int saved_errno = errno;
+    printf("Socket setup failed: %s\n", strerror(saved_errno));
+
+    resolver_deinit(&resolver);
+    return -1;
+}
 
 int socket_recvsome(
         struct socket_t *self,
@@ -228,6 +290,57 @@ int socket_sendall(
     }
 
     return sz;
+}
+
+/*
+ * Inicializa el socket pasándole directamente el file descriptor.
+ *
+ * No queremos que el código del usuario este manipulando el file descriptor,
+ * queremos q interactúe con él *solo* a través de `socket_t`.
+ *
+ * Por ello ponemos esta función privada (`static`).
+ * */
+static
+int _socket_init_with_file_descriptor(struct socket_t *self, int skt) {
+    self->skt = skt;
+    self->closed = false;
+
+    return 0;
+}
+
+int socket_accept(struct socket_t *self, struct socket_t *peer) {
+    /*
+     * `accept` nos bloqueara hasta que algún cliente se conecte a nosotros
+     * y la conexión se establezca.
+     *
+     * Una vez que eso suceda, `accept` retornara el file descriptor
+     * de un *nuevo* socket (`peer_skt`) que representara a la
+     * conexión establecida con *ese* cliente.
+     *
+     * En todo momento podemos seguir usando *nuestro* file descriptor
+     * (`self->skt`) para seguir haciendo más llamadas a `accept`
+     * independientemente de que enviemos/recibamos del socket `peer`.
+     * */
+    int peer_skt = accept(self->skt, nullptr, nullptr);
+    if (peer_skt == -1)
+        return -1;
+
+    /*
+     * `peer_skt` es un file descriptor crudo y no queremos
+     * que nuestro cliente manipule recursos crudos sino que
+     * los use a través de un TDA.
+     *
+     * Por eso inicializamos el TDA `peer` con el nuevo file
+     * descriptor.
+     *
+     * Nota: `peer` debe ser un `socket_t` *sin inicializar*
+     * para que seamos nosotros quienes lo inicializamos aquí.
+     * */
+    int s = _socket_init_with_file_descriptor(peer, peer_skt);
+    if (s == -1)
+        return -1;
+
+    return 0;
 }
 
 int socket_shutdown(struct socket_t *self, int how) {
