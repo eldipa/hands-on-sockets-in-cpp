@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
      * tenemos que chequear nosotros.
      * */
     struct resolver_t resolver;
-    int s = resolver_init(&resolver, hostname, servname);
+    int s = resolver_init(&resolver, hostname, servname, false);
     if (s == -1)
         return -1;
 

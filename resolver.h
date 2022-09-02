@@ -18,12 +18,17 @@ struct resolver_t {
 
 /* Inicializa la estructura y resuelve el dado nombre del host y servicio.
  *
+ * Si `is_passive` es `true` y `hostname` es `nullptr`,
+ * las direcciones retornadas serán aptas para hacer un `bind`
+ * y poner al socket en modo escucha para recibir conexiones.
+ *
  * Retorna 0 en caso de éxito, -1 en caso de error.
  * */
 int resolver_init(
         struct resolver_t *self,
         const char* hostname,
-        const char* servname);
+        const char* servname,
+        bool is_passive);
 
 
 /* Retorna si hay o no una dirección siguiente para testear.

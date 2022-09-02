@@ -13,8 +13,8 @@
 int resolver_init(
         struct resolver_t *self,
         const char* hostname,
-        const char* servname
-        ) {
+        const char* servname,
+        bool is_passive) {
     struct addrinfo hints;
     self->result = self->next = nullptr;
 
@@ -33,7 +33,7 @@ int resolver_init(
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_INET;       /* IPv4 (or AF_INET6 for IPv6)     */
     hints.ai_socktype = SOCK_STREAM; /* TCP  (or SOCK_DGRAM for UDP)    */
-    hints.ai_flags = 0;  /* ya hablaremos de este flag */
+    hints.ai_flags = is_passive ? AI_PASSIVE : 0;
 
     /* Obtengo la (o las) direcciones según el nombre de host y servicio que
      * busco

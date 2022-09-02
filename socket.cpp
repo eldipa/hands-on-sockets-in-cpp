@@ -17,7 +17,7 @@ int socket_init(
         const char *hostname,
         const char *servname) {
     struct resolver_t resolver;
-    int s = resolver_init(&resolver, hostname, servname);
+    int s = resolver_init(&resolver, hostname, servname, false);
     if (s == -1)
         return -1;
 
