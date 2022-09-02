@@ -38,17 +38,14 @@ int main(int argc, char *argv[]) {
 
     if (argc != 1) {
         printf("Bad program call. Expected %s without arguments.\n", argv[0]);
-        goto bad_prog_call;
+        return ret;
     }
 
     /*
      * El TDA `Socket` se encargara de resolver el hostname/service name
      * y se conectará a dicho server via TCP/IP.
      * */
-    Socket skt;
-    s = skt.init_for_connection("www.google.com.ar", "http");
-    if (s == -1)
-        goto connection_failed;
+    Socket skt("www.google.com.ar", "http");
 
     /*
      * Con el socket creado y conectado, ahora enviamos el request HTTP
@@ -167,7 +164,5 @@ connection_closed:
      * */
     skt.deinit();
 
-connection_failed:
-bad_prog_call:
     return ret;
 }

@@ -12,14 +12,12 @@
 #include "socket.h"
 #include "resolver.h"
 
-int Socket::init_for_connection(
+Socket::Socket(
         const char *hostname,
         const char *servname) {
-    Resolver resolver;
-    int s = resolver.init(hostname, servname, false);
-    if (s == -1)
-        return -1;
+    Resolver resolver(hostname, servname, false);
 
+    int s = -1;
     int skt = -1;
     this->closed = true;
 
@@ -67,7 +65,7 @@ int Socket::init_for_connection(
         this->closed = false;
         this->skt = skt;
         resolver.deinit();
-        return 0;
+        return;
     }
 
     /*
@@ -89,15 +87,13 @@ int Socket::init_for_connection(
         ::close(skt);
 
     resolver.deinit();
-    return -1;
+    throw -1;
 }
 
-int Socket::init_for_listen(const char *servname) {
-    Resolver resolver;
-    int s = resolver.init(nullptr, servname, true);
-    if (s == -1)
-        return -1;
+Socket::Socket(const char *servname) {
+    Resolver resolver(nullptr, servname, true);
 
+    int s = -1;
     int skt = -1;
     this->closed = true;
     while (resolver.has_next()) {
@@ -180,7 +176,7 @@ int Socket::init_for_listen(const char *servname) {
         this->closed = false;
         this->skt = skt;
         resolver.deinit();
-        return 0;
+        return;
     }
 
     int saved_errno = errno;
@@ -190,7 +186,12 @@ int Socket::init_for_listen(const char *servname) {
         ::close(skt);
 
     resolver.deinit();
-    return -1;
+    throw -1;
+}
+
+Socket::Socket() {
+    this->skt = -1;
+    this->closed = false;
 }
 
 int Socket::recvsome(

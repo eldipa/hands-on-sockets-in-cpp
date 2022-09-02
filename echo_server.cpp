@@ -36,11 +36,11 @@ int main(int argc, char *argv[]) {
         printf(
                 "Bad program call. Expected %s <servname>\n",
                 argv[0]);
-        goto bad_prog_call;
+        return ret;
     }
 
     /*
-     * Inicializamos nuestro socket "server" o "aceptador"
+     * Construimos nuestro socket "server" o "aceptador"
      * que usaremos para escuchar y aceptar conexiones entrantes.
      *
      * En este mini-ejemplo tendremos un socket `srv` (server) y
@@ -49,10 +49,7 @@ int main(int argc, char *argv[]) {
      * uno para escuchar y aceptar y luego N sockets para sus
      * N clientes.
      * */
-    Socket peer, srv;
-    s = srv.init_for_listen(servname);
-    if (s == -1)
-        goto listen_failed;
+    Socket peer, srv(servname);
 
     /*
      * Bloqueamos el programa hasta q haya una conexión entrante
@@ -163,7 +160,5 @@ recv_failed:
 accept_failed:
     srv.deinit();
 
-listen_failed:
-bad_prog_call:
     return ret;
 }

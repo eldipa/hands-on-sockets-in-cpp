@@ -21,9 +21,9 @@ class Socket {
 
     public:
 /*
- * Inicializamos el socket tanto para conectarse a un servidor
- * (`Socket::init_for_connection`) como para inicializarlo para ser usado
- * por un servidor (`Socket::init_for_listen`).
+ * Constructores para `Socket` tanto para conectarse a un servidor
+ * (`Socket::Socket(const char*, const char*)`) como para ser usado
+ * por un servidor (`Socket::Socket(const char*)`).
  *
  * Muchas librerías de muchos lenguajes ofrecen una única formal de inicializar
  * los sockets y luego métodos (post-inicialización) para establecer
@@ -34,19 +34,26 @@ class Socket {
  *
  * Este TDA va por ese lado.
  *
- * Para `Socket::init_for_connection`,  <hostname>/<servname> es la dirección
+ * Para `Socket::Socket(const char*, const char*)`,  <hostname>/<servname> es la dirección
  * de la máquina remota a la cual se quiere conectar.
  *
- * Para `Socket::init_for_listen`, buscara una dirección local válida
+ * Para `Socket::Socket(const char*)`, buscara una dirección local válida
  * para escuchar y aceptar conexiones automáticamente en el <servname> dado.
  *
- * Ambas funciones retornan 0 si se pudo conectar/poner en escucha
- * o -1 en caso de error.
+ * En caso de error los constructores lanzaran una excepción.
  * */
-int init_for_connection(
+Socket(
         const char *hostname,
         const char *servname);
-int init_for_listen(const char *servname);
+
+explicit Socket(const char *servname);
+
+/*
+ * Constructor por default de `Socket`. Inicializa el socket como si no estuviese
+ * conectado. La única utilidad de construir sockets con este constructor está
+ * en pasarlos por `Socket::accept` y que sea dicho método quien lo conecte.
+ * */
+Socket();
 
 /* `Socket::sendsome` lee hasta `sz` bytes del buffer y los envía. La función
  * puede enviar menos bytes sin embargo.

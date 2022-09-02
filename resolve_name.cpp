@@ -50,10 +50,7 @@ int main(int argc, char *argv[]) {
      * por nosotros y retornar un único código que en C (así como en Golang)
      * tenemos que chequear nosotros.
      * */
-    Resolver resolver;
-    int s = resolver.init(hostname, servname, false);
-    if (s == -1)
-        return -1;
+    Resolver resolver(hostname, servname, false);
 
     /*
      * Recorda que `Resolver` te da una lista de direcciones

@@ -10,7 +10,7 @@
 #include <netdb.h>
 #include <unistd.h>
 
-int Resolver::init(
+Resolver::Resolver(
         const char* hostname,
         const char* servname,
         bool is_passive) {
@@ -100,11 +100,10 @@ int Resolver::init(
          * ya que al fallar `getaddrinfo` este *no* reservo ningún recurso
          * y por lo tanto *no* tenemos que liberar ninguno.
          * */
-        return -1;
+        throw -1;
     }
 
     this->_next = this->result;
-    return 0;
 }
 
 bool Resolver::has_next() {

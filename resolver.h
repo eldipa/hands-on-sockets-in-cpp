@@ -17,15 +17,15 @@ class Resolver {
     struct addrinfo *_next;
 
     public:
-/* Inicializa el objeto y resuelve el dado nombre del host y servicio.
+/* Crea el objeto y resuelve el dado nombre del host y servicio.
  *
  * Si `is_passive` es `true` y `hostname` es `nullptr`,
  * las direcciones retornadas serán aptas para hacer un `bind`
  * y poner al socket en modo escucha para recibir conexiones.
  *
- * Retorna 0 en caso de éxito, -1 en caso de error.
+ * En caso de error se lanza una excepción.
  * */
-int init(
+Resolver(
         const char* hostname,
         const char* servname,
         bool is_passive);
