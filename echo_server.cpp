@@ -24,6 +24,7 @@
  *
  **/
 int main(int argc, char *argv[]) {
+    int ret = -1;
     int s = -1;
     bool was_closed = false;
 
@@ -35,7 +36,7 @@ int main(int argc, char *argv[]) {
         printf(
                 "Bad program call. Expected %s <servname>\n",
                 argv[0]);
-        return -1;
+        goto bad_prog_call;
     }
 
     /*
@@ -51,7 +52,7 @@ int main(int argc, char *argv[]) {
     struct socket_t peer, srv;
     s = socket_init_for_listen(&srv, servname);
     if (s == -1)
-        return -1;
+        goto listen_failed;
 
     /*
      * Bloqueamos el programa hasta q haya una conexión entrante
@@ -60,10 +61,8 @@ int main(int argc, char *argv[]) {
      * inicializado aquí.
      * */
     s = socket_accept(&srv, &peer);
-    if (s == -1) {
-        socket_deinit(&srv);
-        return -1;
-    }
+    if (s == -1)
+        goto accept_failed;
 
     /*
      * A partir de aquí podríamos volver a usar `srv` para aceptar
@@ -103,9 +102,7 @@ int main(int argc, char *argv[]) {
              * 99% casi seguro que es un error
              * */
             perror("socket recv failed");
-            socket_deinit(&peer);
-            socket_deinit(&srv);
-            return -1;
+            goto recv_failed;
         }
 
         s = socket_sendall(&peer, buf, sz, &was_closed);
@@ -115,17 +112,58 @@ int main(int argc, char *argv[]) {
 
         if (s == -1) {
             perror("socket send failed");
-            socket_deinit(&peer);
-            socket_deinit(&srv);
-            return -1;
+            goto send_failed;
         }
     }
 
+    ret = 0;
+
     /*
-     * Cerramos tanto el socket `peer` como el `srv`.
+     * Nótese el orden de los `goto` (labels) y de la liberación de cada
+     * recurso.
+     * El orden es exactamente el inverso a como se fueron reservando
+     * dichos recursos.
+     *
+     * Ambos forman un "stack":
+     *
+     *      ret = -1; // failure by default         Recursos
+     *
+     *      reservo A;                              [ )
+     *      if (fail)
+     *         goto reservar_A_failed;
+     *
+     *      reservo B;                              [ A )
+     *      if (fail)
+     *         goto reservar_B_failed;
+     *
+     *      reservo C;                              [ A | B )
+     *      if (fail)
+     *         goto reservar_C_failed;
+     *
+     *      ...                                     [ A | B | C )
+     *
+     *      ret = 0; // exito
+     *
+     *      libero C;
+     *
+     *  reservar_C_failed:                          [ A | B )
+     *      libero B;
+     *
+     *  reservar_B_failed:                          [ A )
+     *      libero A;
+     *
+     *  reservar_A_failed:                          [ )
+     *      return ret;
+     *
      * */
+send_failed:
+recv_failed:
     socket_deinit(&peer);
+
+accept_failed:
     socket_deinit(&srv);
 
-    return 0;
+listen_failed:
+bad_prog_call:
+    return ret;
 }

@@ -11,12 +11,8 @@
  * (www.google.com.ar) y le pide una página web y la imprime por pantalla.
  * */
 int main(int argc, char *argv[]) {
+    int ret = -1;
     int s = -1;
-
-    if (argc != 1) {
-        printf("Bad program call. Expected %s without arguments.\n", argv[0]);
-        return -1;
-    }
 
     /*
      * HTTP/1.1 es un protocolo de texto en donde el cliente (nosotros)
@@ -40,6 +36,11 @@ int main(int argc, char *argv[]) {
                        "Host: www.google.com.ar\r\n"
                        "\r\n";
 
+    if (argc != 1) {
+        printf("Bad program call. Expected %s without arguments.\n", argv[0]);
+        goto bad_prog_call;
+    }
+
     /*
      * El TDA `socket_t` se encargara de resolver el hostname/service name
      * y se conectará a dicho server via TCP/IP.
@@ -47,7 +48,7 @@ int main(int argc, char *argv[]) {
     struct socket_t skt;
     s = socket_init_for_connection(&skt, "www.google.com.ar", "http");
     if (s == -1)
-        return -1;
+        goto connection_failed;
 
     /*
      * Con el socket creado y conectado, ahora enviamos el request HTTP
@@ -75,15 +76,13 @@ int main(int argc, char *argv[]) {
          * marca un error.
          * */
         printf("The connection was closed by the other end.\n");
-        socket_deinit(&skt);
-        return -1;
+        goto connection_closed;
     }
 
     assert(s != 0);
     if (s == -1) {
         perror("socket send failed");
-        socket_deinit(&skt);
-        return -1;
+        goto send_failed;
     }
 
     /*
@@ -130,8 +129,7 @@ int main(int argc, char *argv[]) {
              * 99% casi seguro que es un error
              * */
             perror("socket recv failed");
-            socket_deinit(&skt);
-            return s;
+            goto recv_failed;
         }
 
         /*
@@ -148,6 +146,20 @@ int main(int argc, char *argv[]) {
     printf("\n");
 
     /*
+     * Si llegamos hasta acá es por que no nos topamos con ningún error
+     * por lo tanto return-code de esta función (y de este programa)
+     * debe ser 0 (éxito).
+     *
+     * Si hubiéramos detectado algo error, nunca ejecutaríamos
+     * este código y main retornaría el valor de `ret` por default
+     * que es -1 (error).
+     * */
+    ret = 0;
+
+recv_failed:
+send_failed:
+connection_closed:
+    /*
      * Liberamos los recursos.
      *
      * El TDA socket_t que se implementó se encargará de
@@ -155,5 +167,7 @@ int main(int argc, char *argv[]) {
      * */
     socket_deinit(&skt);
 
-    return 0;
+connection_failed:
+bad_prog_call:
+    return ret;
 }
