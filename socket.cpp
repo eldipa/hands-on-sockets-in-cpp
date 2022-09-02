@@ -335,16 +335,7 @@ int socket_t::sendall(
     return sz;
 }
 
-/*
- * Inicializa el socket pasándole directamente el file descriptor.
- *
- * No queremos que el código del usuario este manipulando el file descriptor,
- * queremos q interactúe con él *solo* a través de `socket_t`.
- *
- * Por ello ponemos esta función privada (`static`).
- * */
-static
-int _socket_init_with_file_descriptor(struct socket_t *peer, int skt) {
+int socket_t::init_with_file_descriptor(struct socket_t *peer, int skt) {
     peer->skt = skt;
     peer->closed = false;
 
@@ -379,7 +370,7 @@ int socket_t::accept(struct socket_t *peer) {
      * Nota: `peer` debe ser un `socket_t` *sin inicializar*
      * para que seamos nosotros quienes lo inicializamos aquí.
      * */
-    int s = _socket_init_with_file_descriptor(peer, peer_skt);
+    int s = init_with_file_descriptor(peer, peer_skt);
     if (s == -1)
         return -1;
 

@@ -12,9 +12,11 @@
  * en direcciones IPv4 para TCP.
  * */
 struct resolver_t {
-    struct addrinfo *result; // privado, no accedas a este atributo
-    struct addrinfo *_next; // privado, no accedas a este atributo
+    private:
+    struct addrinfo *result;
+    struct addrinfo *_next;
 
+    public:
 /* Inicializa la estructura y resuelve el dado nombre del host y servicio.
  *
  * Si `is_passive` es `true` y `hostname` es `nullptr`,

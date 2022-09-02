@@ -15,4 +15,4 @@ line,+whitespace/parens,+whitespace/semicolon"]
     rev: 9a9bbc00895bbdb7670231c2565d4f1309c42905  # SHA of v1.3.5
     hooks:
       - id: cppcheck
-        args: ["--enable=warning,style,information", "--language=c++", "--std=c++17", "--error-exitcode=1"]
+        args: ["--enable=warning,style,information", "--language=c++", "--std=c++17", "--error-exitcode=1", "--suppress=noConstructor"]
