@@ -1,9 +1,4 @@
-/*
- * Includes necesarios para `getaddrinfo`
- * */
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
+#include "resolver.h"
 
 /*
  * Includes necesarios para `inet_ntoa`
@@ -48,100 +43,21 @@ int main(int argc, char *argv[]) {
     }
 
     /*
-     * Ver más adelante
+     * El TDA `resolver_t` se encargara de resolver el hostname/service name
+     * encapsulando todos los detalles que no nos interesan saber.
+     *
+     * En particular el TDA se encarga de realizar todos los chequeos de errores
+     * por nosotros y retornar un único código que en C (así como en Golang)
+     * tenemos que chequear nosotros.
      * */
-    struct addrinfo hints;
-    struct addrinfo *result;
-
-    /*
-     * `getaddrinfo` nos resuelve el nombre de una máquina (host) y de un
-     * servicio a una dirección.
-     * Nos puede retornar múltiples direcciones incluso de
-     * protocolos/tecnologías que no nos interesan.
-     * Para pre-seleccionar que direcciones nos interesan le pasamos
-     * un hint, una estructura con algunos campos completados (no todos)
-     * que le indicaran que tipo de direcciones queremos.
-     *
-     * Para nuestros fines queremos direcciones de internet IPv4
-     * y para servicios de TCP.
-     * */
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;       /* IPv4 (or AF_INET6 for IPv6)     */
-    hints.ai_socktype = SOCK_STREAM; /* TCP  (or SOCK_DGRAM for UDP)    */
-    hints.ai_flags = 0;  /* ya hablaremos de este flag */
-
-
-    /* Obtengo la (o las) direcciones según el nombre de host y servicio que
-     * busco
-     *
-     * De todas las direcciones posibles, solo me interesan aquellas que sean
-     * IPv4 y TCP (según lo definido en hints)
-     *
-     * El resultado lo guarda en result que es un puntero al primer nodo
-     * de una lista simplemente enlazada.
-     * */
-    int s = getaddrinfo(hostname, servname, &hints, &result);
-
-    /* Es muy importante chequear los errores.
-     *
-     * En C, Golang, Rust, la forma de comunicar errores al caller (a quien
-     * nos llamó) es retornando un código de error.
-     *
-     * La página de manual de `getaddrinfo` aclara que si `s == 0`
-     * entonces todo salio bien.
-     *
-     * Si `s == EAI_SYSTEM` entonces el error es del sistema y deberemos
-     * inspeccionar la variable global `errno`.
-     *
-     * Si `s != EAI_SYSTEM`, entonces el valor de retorno debe ser
-     * inspeccionado con `gai_strerror`.
-     *
-     * Lo siguiente a continuación es una muy primitiva y simplificada
-     * forma de manejo de errores. Ya lo mejoraremos.
-     * */
-    if (s != 0) {
-        if (s == EAI_SYSTEM) {
-            /*
-             * Como `errno` es global y puede ser modificada por *cualquier* otra
-             * función, es *importantísimo* copiarla apenas detectemos el error.
-             * De otro modo nos arriesgamos a que cualquier otra función
-             * que llamemos, como `printf`, pueda pisarnos la variable y
-             * y perdamos el código del error.
-             */
-            int saved_errno = errno;
-
-            /*
-             * Podemos usar `strerror` para traducir ese código de error
-             * en un mensaje por un humano y así imprimirlo.
-             *
-             * `strerror` *no* es thread-safe así que esto es solo una
-             * version draft y *no* debería ser usado (la version thread-safe
-             * es `strerror_r`)
-             * */
-            printf(
-                    "Host/service name resolution failed (getaddrinfo): %s\n",
-                    strerror(saved_errno));
-
-        } else {
-            /*
-             * La documentación de `getaddrinfo` dice que en este caso
-             * debemos usar `gai_strerror` para obtener el mensaje de error.
-             * */
-            printf(
-                    "Host/service name resolution failed (getaddrinfo): %s\n",
-                    gai_strerror(s));
-        }
-
-        /*
-         * Finalizamos el programa. Esto lo podemos hacer sin problemas
-         * ya que al fallar `getaddrinfo` este *no* reservo ningún recurso
-         * y por lo tanto *no* tenemos que liberar ninguno.
-         * */
+    struct resolver_t resolver;
+    int s = resolver_init(&resolver, hostname, servname);
+    if (s == -1)
         return -1;
-    }
 
     /*
-     * Recorda que `getaddrinfo` te da una lista de direcciones.
+     * Recorda que `resolver_t` te da una lista de direcciones
+     * (que vienen de `getaddrinfo`)
      *
      * Un mismo nombre puede resolverse a múltiples direcciones que
      * sirven como balanceo de carga y redundancia.
@@ -152,7 +68,9 @@ int main(int argc, char *argv[]) {
      * `inet_ntoa` es solo para direcciones IPv4! Este programa
      * no soporta IPv6.
      * */
-    for (struct addrinfo *rp = result; rp != NULL; rp = rp->ai_next) {
+    while (resolver_has_next(&resolver)) {
+        struct addrinfo *rp = resolver_next(&resolver);
+
         struct sockaddr_in *skt_addr = (struct sockaddr_in*)rp->ai_addr;
         struct in_addr internet_addr = skt_addr->sin_addr;
 
@@ -175,14 +93,10 @@ int main(int argc, char *argv[]) {
     }
 
     /*
-     * `getaddrinfo` reservó recursos en algún lado (posiblemente el heap).
-     * Es nuestra obligación liberar dichos recursos cuando no los necesitamos
-     * más.
-     *
-     * La manpage dice q debemos usar `freeaddrinfo` para ello y
-     * así lo hacemos.
+     * Llamamos al des-inicializador del TDA para la correcta
+     * liberación de los recursos.
      * */
-    freeaddrinfo(result);
+    resolver_deinit(&resolver);
 
     return 0;
 }
