@@ -24,7 +24,6 @@ struct resolver_t {
  * Retorna 0 en caso de éxito, -1 en caso de error.
  * */
 int init(
-        struct resolver_t *self,
         const char* hostname,
         const char* servname,
         bool is_passive);
@@ -35,18 +34,18 @@ int init(
  *
  * Si no la hay se puede asumir que el resolver está extinguido.
  * */
-bool has_next(struct resolver_t *self);
+bool has_next();
 
 /* Retorna la siguiente dirección para testear e internamente
  * mueve el iterador a la siguiente dirección.
  *
  * Si no existe una siguiente dirección el resultado es indefinido.
  * */
-struct addrinfo* next(struct resolver_t *self);
+struct addrinfo* next();
 
 /*
  * Libera los recursos.
  * */
-void deinit(struct resolver_t *self);
+void deinit();
 };
 #endif

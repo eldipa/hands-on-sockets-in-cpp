@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
      * N clientes.
      * */
     struct socket_t peer, srv;
-    s = srv.init_for_listen(&srv, servname);
+    s = srv.init_for_listen(servname);
     if (s == -1)
         goto listen_failed;
 
@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
      * conectado en particular usando un socket distinto, el `peer`,
      * inicializado aquí.
      * */
-    s = srv.accept(&srv, &peer);
+    s = srv.accept(&peer);
     if (s == -1)
         goto accept_failed;
 
@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
          * pero usamos `sizeof(buf)-1` en el `socket_t::recvsome`
          * de `cliente_http.cpp`?
          * */
-        int sz = peer.recvsome(&peer, buf, sizeof(buf), &was_closed);
+        int sz = peer.recvsome(buf, sizeof(buf), &was_closed);
 
         if (was_closed)
             break;
@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
             goto recv_failed;
         }
 
-        s = peer.sendall(&peer, buf, sz, &was_closed);
+        s = peer.sendall(buf, sz, &was_closed);
 
         if (was_closed)
             break;
@@ -158,10 +158,10 @@ int main(int argc, char *argv[]) {
      * */
 send_failed:
 recv_failed:
-    peer.deinit(&peer);
+    peer.deinit();
 
 accept_failed:
-    srv.deinit(&srv);
+    srv.deinit();
 
 listen_failed:
 bad_prog_call:

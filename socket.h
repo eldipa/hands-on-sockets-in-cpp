@@ -34,12 +34,9 @@ struct socket_t {
  * o -1 en caso de error.
  * */
 int init_for_connection(
-        struct socket_t *self,
         const char *hostname,
         const char *servname);
-int init_for_listen(
-        struct socket_t *self,
-        const char *servname);
+int init_for_listen(const char *servname);
 
 /* `socket_t::sendsome` lee hasta `sz` bytes del buffer y los envía. La función
  * puede enviar menos bytes sin embargo.
@@ -57,12 +54,10 @@ int init_for_listen(
  * Lease manpage de `send` y `recv`
  * */
 int sendsome(
-        struct socket_t *self,
         const void *data,
         unsigned int sz,
         bool *was_closed);
 int recvsome(
-        struct socket_t *self,
         void *data,
         unsigned int sz,
         bool *was_closed);
@@ -86,12 +81,10 @@ int recvsome(
  *
  * */
 int sendall(
-        struct socket_t *self,
         const void *data,
         unsigned int sz,
         bool *was_closed);
 int recvall(
-        struct socket_t *self,
         void *data,
         unsigned int sz,
         bool *was_closed);
@@ -105,26 +98,26 @@ int recvall(
  *
  * Retorna -1 en caso de error, 0 de otro modo.
  * */
-int accept(struct socket_t *self, struct socket_t *peer);
+int accept(struct socket_t *peer);
 
 /*
  * Cierra la conexión ya sea parcial o completamente.
  * Lease manpage de `shutdown`
  * */
-int shutdown(struct socket_t *self, int how);
+int shutdown(int how);
 
 /*
  * Cierra el socket. El cierre no implica un `shutdown`
  * que debe ser llamado explícitamente.
  * */
-int close(struct socket_t *self);
+int close();
 
 /*
  * Desinicializa el socket. Si aun esta conectado,
  * se llamara a `socket_t::shutdown` y `socket_t::close`
  * automáticamente.
  * */
-void deinit(struct socket_t *self);
+void deinit();
 };
 #endif
 

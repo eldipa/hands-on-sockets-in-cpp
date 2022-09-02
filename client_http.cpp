@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
      * y se conectará a dicho server via TCP/IP.
      * */
     struct socket_t skt;
-    s = skt.init_for_connection(&skt, "www.google.com.ar", "http");
+    s = skt.init_for_connection("www.google.com.ar", "http");
     if (s == -1)
         goto connection_failed;
 
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
      * datos ante un short-write.
      * */
     bool was_closed;
-    s = skt.sendall(&skt, req, sizeof(req) - 1, &was_closed);
+    s = skt.sendall(req, sizeof(req) - 1, &was_closed);
 
     if (was_closed) {
         /*
@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
     printf("Page:\n");
     while (not was_closed) {
         char buf[512] = {0};
-        s = skt.recvsome(&skt, buf, sizeof(buf) - 1, &was_closed);
+        s = skt.recvsome(buf, sizeof(buf) - 1, &was_closed);
         if (was_closed) {
             break;
         }
@@ -165,7 +165,7 @@ connection_closed:
      * El TDA socket_t que se implementó se encargará de
      * hacer el shutdown y el close por nosotros.
      * */
-    skt.deinit(&skt);
+    skt.deinit();
 
 connection_failed:
 bad_prog_call:

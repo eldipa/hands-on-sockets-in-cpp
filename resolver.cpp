@@ -11,12 +11,11 @@
 #include <unistd.h>
 
 int resolver_t::init(
-        struct resolver_t *self,
         const char* hostname,
         const char* servname,
         bool is_passive) {
     struct addrinfo hints;
-    self->result = self->_next = nullptr;
+    this->result = this->_next = nullptr;
 
     /*
      * `getaddrinfo` nos resuelve el nombre de una máquina (host) y de un
@@ -44,7 +43,7 @@ int resolver_t::init(
      * El resultado lo guarda en result que es un puntero al primer nodo
      * de una lista simplemente enlazada.
      * */
-    int s = getaddrinfo(hostname, servname, &hints, &self->result);
+    int s = getaddrinfo(hostname, servname, &hints, &this->result);
 
     /* Es muy importante chequear los errores.
      *
@@ -104,21 +103,21 @@ int resolver_t::init(
         return -1;
     }
 
-    self->_next = self->result;
+    this->_next = this->result;
     return 0;
 }
 
-bool resolver_t::has_next(struct resolver_t *self) {
-    return self->_next != NULL;
+bool resolver_t::has_next() {
+    return this->_next != NULL;
 }
 
-struct addrinfo* resolver_t::next(struct resolver_t *self) {
-    struct addrinfo *ret = self->_next;
-    self->_next = ret->ai_next;
+struct addrinfo* resolver_t::next() {
+    struct addrinfo *ret = this->_next;
+    this->_next = ret->ai_next;
     return ret;
 }
 
-void resolver_t::deinit(struct resolver_t *self) {
+void resolver_t::deinit() {
     /*
      * `getaddrinfo` reservó recursos en algún lado (posiblemente el heap).
      * Es nuestra obligación liberar dichos recursos cuando no los necesitamos
@@ -127,6 +126,6 @@ void resolver_t::deinit(struct resolver_t *self) {
      * La manpage dice q debemos usar `freeaddrinfo` para ello y
      * así lo hacemos.
      * */
-    freeaddrinfo(self->result);
+    freeaddrinfo(this->result);
 }
 
