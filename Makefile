@@ -4,7 +4,7 @@ all: build
 
 build:
 	g++ -std=c++17 -ggdb -O0 -pedantic -Wall -D _POSIX_C_SOURCE=200809L resolver.cpp resolve_name.cpp -o resolve_name
-	g++ -std=c++17 -ggdb -O0 -pedantic -Wall -D _POSIX_C_SOURCE=200809L client_http.cpp -o client_http 
+	g++ -std=c++17 -ggdb -O0 -pedantic -Wall -D _POSIX_C_SOURCE=200809L resolver.cpp client_http.cpp -o client_http 
 
 _tests:
 	byexample --timeout 8 -l shell README.md

@@ -1,9 +1,4 @@
-/*
- * Includes necesarios para `getaddrinfo`
- * */
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
+#include "resolver.h"
 
 /*
  * Includes para `socket` y compañía
@@ -51,36 +46,15 @@ int main(int argc, char *argv[]) {
                        "Host: www.google.com.ar\r\n"
                        "\r\n";
 
-
     /*
-     * Resolvemos el hostname google.com y obtenemos su dirección
-     * IPv4 y puerto TCP del mismo modo que en resolve_name
-     *
-     * Notaras lo **poco profesional** que es copiar y pegar código.
-     * Esto pide a gritos un refactor.
+     * El TDA `resolver_t` se encargara de resolver el hostname/service name
+     * encapsulando todos los detalles que no nos interesan saber.
      * */
-    struct addrinfo hints;
-    struct addrinfo *result;
-
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = 0;
-
-    s = getaddrinfo("www.google.com.ar", "http", &hints, &result);
-    if (s != 0) {
-        if (s == EAI_SYSTEM) {
-            int saved_errno = errno;
-            printf(
-                    "Host/service name resolution failed (getaddrinfo): %s\n",
-                    strerror(saved_errno));
-        } else {
-            printf(
-                    "Host/service name resolution failed (getaddrinfo): %s\n",
-                    gai_strerror(s));
-        }
+    struct resolver_t resolver;
+    s = resolver_init(&resolver, "www.google.com.ar", "http");
+    if (s == -1)
         return -1;
-    }
+
 
     /*
      * Para código user (nuestro programa), un socket es tan solo un número.
@@ -105,7 +79,9 @@ int main(int argc, char *argv[]) {
      * Es responsabilidad nuestra probar cada una de ellas hasta encontrar
      * una que funcione.
      * */
-    for (struct addrinfo *addr = result; addr != NULL; addr = addr->ai_next) {
+    while (resolver_has_next(&resolver)) {
+        struct addrinfo *addr = resolver_next(&resolver);
+
         /* Cerramos el socket si nos quedo abierto de la iteración
          * anterior
          * */
@@ -153,7 +129,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    freeaddrinfo(result);
+    resolver_deinit(&resolver);
 
     /*
      * Con el socket creado y conectado, ahora enviamos el request HTTP
