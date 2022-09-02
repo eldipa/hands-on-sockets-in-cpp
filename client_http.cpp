@@ -46,22 +46,22 @@ int main(int argc, char *argv[]) {
      * y se conectará a dicho server via TCP/IP.
      * */
     struct socket_t skt;
-    s = socket_init_for_connection(&skt, "www.google.com.ar", "http");
+    s = skt.init_for_connection(&skt, "www.google.com.ar", "http");
     if (s == -1)
         goto connection_failed;
 
     /*
      * Con el socket creado y conectado, ahora enviamos el request HTTP
-     * con `socket_sendall`.
+     * con `socket_t::sendall`.
      *
-     * `socket_sendall` se encarga de llamar a `send` varias veces hasta
+     * `socket_t::sendall` se encarga de llamar a `send` varias veces hasta
      * lograr enviar todo lo pedido o fallar.
      *
      * Esta es la manera de asegurarse el envío completo de los
      * datos ante un short-write.
      * */
     bool was_closed;
-    s = socket_sendall(&skt, req, sizeof(req) - 1, &was_closed);
+    s = skt.sendall(&skt, req, sizeof(req) - 1, &was_closed);
 
     if (was_closed) {
         /*
@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
      * `recv` sufre de short-reads.
      *
      * Si quisiéramos bloquearnos hasta leer por completo la
-     * página web deberíamos llamar a `socket_recvall` que implementa
+     * página web deberíamos llamar a `socket_t::recvall` que implementa
      * el loop y resuelve el short-read.
      *
      * Sin embargo, para que queremos leer toda la página
@@ -114,12 +114,12 @@ int main(int argc, char *argv[]) {
      *
      * El short-read no es un bug, es un feature!
      *
-     * Por eso aquí usamos `socket_recvsome` y no `socket_recvall`.
+     * Por eso aquí usamos `socket_t::recvsome` y no `socket_t::recvall`.
      * */
     printf("Page:\n");
     while (not was_closed) {
         char buf[512] = {0};
-        s = socket_recvsome(&skt, buf, sizeof(buf) - 1, &was_closed);
+        s = skt.recvsome(&skt, buf, sizeof(buf) - 1, &was_closed);
         if (was_closed) {
             break;
         }
@@ -165,7 +165,7 @@ connection_closed:
      * El TDA socket_t que se implementó se encargará de
      * hacer el shutdown y el close por nosotros.
      * */
-    socket_deinit(&skt);
+    skt.deinit(&skt);
 
 connection_failed:
 bad_prog_call:

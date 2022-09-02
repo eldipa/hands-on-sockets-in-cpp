@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
      * tenemos que chequear nosotros.
      * */
     struct resolver_t resolver;
-    int s = resolver_init(&resolver, hostname, servname, false);
+    int s = resolver.init(&resolver, hostname, servname, false);
     if (s == -1)
         return -1;
 
@@ -68,8 +68,8 @@ int main(int argc, char *argv[]) {
      * `inet_ntoa` es solo para direcciones IPv4! Este programa
      * no soporta IPv6.
      * */
-    while (resolver_has_next(&resolver)) {
-        struct addrinfo *rp = resolver_next(&resolver);
+    while (resolver.has_next(&resolver)) {
+        struct addrinfo *rp = resolver.next(&resolver);
 
         struct sockaddr_in *skt_addr = (struct sockaddr_in*)rp->ai_addr;
         struct in_addr internet_addr = skt_addr->sin_addr;
@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
      * Llamamos al des-inicializador del TDA para la correcta
      * liberación de los recursos.
      * */
-    resolver_deinit(&resolver);
+    resolver.deinit(&resolver);
 
     return 0;
 }

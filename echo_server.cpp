@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
      * N clientes.
      * */
     struct socket_t peer, srv;
-    s = socket_init_for_listen(&srv, servname);
+    s = srv.init_for_listen(&srv, servname);
     if (s == -1)
         goto listen_failed;
 
@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
      * conectado en particular usando un socket distinto, el `peer`,
      * inicializado aquí.
      * */
-    s = socket_accept(&srv, &peer);
+    s = srv.accept(&srv, &peer);
     if (s == -1)
         goto accept_failed;
 
@@ -77,22 +77,22 @@ int main(int argc, char *argv[]) {
          * Loop principal: lo que el servidor recibe lo vuelve a enviar
          * al cliente. Es un *echo* server después de todo!
          *
-         * Usamos `socket_recvsome` por q no sabemos cuanto vamos a
-         * recibir exactamente pero usamos `socket_sendall` por
+         * Usamos `socket_t::recvsome` por q no sabemos cuanto vamos a
+         * recibir exactamente pero usamos `socket_t::sendall` por
          * que sabemos cuanto queremos enviar.
          *
-         * Podríamos usar también `socket_sendsome` para hacer
+         * Podríamos usar también `socket_t::sendsome` para hacer
          * ciertas optimizaciones pero acá nos quedamos con la
          * version simple (y fácil de entender).
          * Si queres indagar más podes ver la implementación
          * de `tiburoncin` pero te advierto, es heavy.
          * https://github.com/eldipa/tiburoncin
          *
-         * Pregunta: por que usamos `sizeof(buf)` en este `socket_recvsome`
-         * pero usamos `sizeof(buf)-1` en el `socket_recvsome`
+         * Pregunta: por que usamos `sizeof(buf)` en este `socket_t::recvsome`
+         * pero usamos `sizeof(buf)-1` en el `socket_t::recvsome`
          * de `cliente_http.cpp`?
          * */
-        int sz = socket_recvsome(&peer, buf, sizeof(buf), &was_closed);
+        int sz = peer.recvsome(&peer, buf, sizeof(buf), &was_closed);
 
         if (was_closed)
             break;
@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
             goto recv_failed;
         }
 
-        s = socket_sendall(&peer, buf, sz, &was_closed);
+        s = peer.sendall(&peer, buf, sz, &was_closed);
 
         if (was_closed)
             break;
@@ -158,10 +158,10 @@ int main(int argc, char *argv[]) {
      * */
 send_failed:
 recv_failed:
-    socket_deinit(&peer);
+    peer.deinit(&peer);
 
 accept_failed:
-    socket_deinit(&srv);
+    srv.deinit(&srv);
 
 listen_failed:
 bad_prog_call:

@@ -10,13 +10,13 @@
 #include <netdb.h>
 #include <unistd.h>
 
-int resolver_init(
+int resolver_t::init(
         struct resolver_t *self,
         const char* hostname,
         const char* servname,
         bool is_passive) {
     struct addrinfo hints;
-    self->result = self->next = nullptr;
+    self->result = self->_next = nullptr;
 
     /*
      * `getaddrinfo` nos resuelve el nombre de una máquina (host) y de un
@@ -104,21 +104,21 @@ int resolver_init(
         return -1;
     }
 
-    self->next = self->result;
+    self->_next = self->result;
     return 0;
 }
 
-bool resolver_has_next(struct resolver_t *self) {
-    return self->next != NULL;
+bool resolver_t::has_next(struct resolver_t *self) {
+    return self->_next != NULL;
 }
 
-struct addrinfo* resolver_next(struct resolver_t *self) {
-    struct addrinfo *ret = self->next;
-    self->next = ret->ai_next;
+struct addrinfo* resolver_t::next(struct resolver_t *self) {
+    struct addrinfo *ret = self->_next;
+    self->_next = ret->ai_next;
     return ret;
 }
 
-void resolver_deinit(struct resolver_t *self) {
+void resolver_t::deinit(struct resolver_t *self) {
     /*
      * `getaddrinfo` reservó recursos en algún lado (posiblemente el heap).
      * Es nuestra obligación liberar dichos recursos cuando no los necesitamos
