@@ -60,8 +60,10 @@ int main(int argc, char *argv[]) {
      * inicializado aquí.
      * */
     s = socket_accept(&srv, &peer);
-    if (s == -1)
+    if (s == -1) {
+        socket_deinit(&srv);
         return -1;
+    }
 
     /*
      * A partir de aquí podríamos volver a usar `srv` para aceptar
@@ -101,6 +103,8 @@ int main(int argc, char *argv[]) {
              * 99% casi seguro que es un error
              * */
             perror("socket recv failed");
+            socket_deinit(&peer);
+            socket_deinit(&srv);
             return -1;
         }
 
@@ -111,6 +115,8 @@ int main(int argc, char *argv[]) {
 
         if (s == -1) {
             perror("socket send failed");
+            socket_deinit(&peer);
+            socket_deinit(&srv);
             return -1;
         }
     }

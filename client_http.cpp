@@ -75,12 +75,14 @@ int main(int argc, char *argv[]) {
          * marca un error.
          * */
         printf("The connection was closed by the other end.\n");
+        socket_deinit(&skt);
         return -1;
     }
 
     assert(s != 0);
     if (s == -1) {
         perror("socket send failed");
+        socket_deinit(&skt);
         return -1;
     }
 
@@ -128,6 +130,7 @@ int main(int argc, char *argv[]) {
              * 99% casi seguro que es un error
              * */
             perror("socket recv failed");
+            socket_deinit(&skt);
             return s;
         }
 

@@ -67,6 +67,7 @@ int socket_init_for_connection(
          * */
         self->closed = false;
         self->skt = skt;
+        resolver_deinit(&resolver);
         return 0;
     }
 
@@ -76,6 +77,17 @@ int socket_init_for_connection(
      * */
     int saved_errno = errno;
     printf("Connection failed: %s\n", strerror(saved_errno));
+
+    /*
+     * Si el `skt` es -1 es por q (1) no entramos nunca al for-loop
+     * o (2) la ultima llamada `socket` fallo y retorno -1.
+     * En ambos casos no debemos cerrar ningun socket.
+     *
+     * Si en cambio `skt` es distinto de -1 significa q tenemos
+     * un socket abierto.
+     * */
+    if (skt != -1)
+        close(skt);
 
     resolver_deinit(&resolver);
     return -1;
@@ -171,11 +183,15 @@ int socket_init_for_listen(
          * */
         self->closed = false;
         self->skt = skt;
+        resolver_deinit(&resolver);
         return 0;
     }
 
     int saved_errno = errno;
     printf("Socket setup failed: %s\n", strerror(saved_errno));
+
+    if (skt != -1)
+        close(skt);
 
     resolver_deinit(&resolver);
     return -1;
