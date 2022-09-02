@@ -48,6 +48,35 @@ int socket_recvsome(
         bool *was_closed);
 
 /*
+ * `socket_sendall` envía exactamente `sz` bytes leídos del buffer, ni más,
+ * ni menos. `socket_recvall` recibe exactamente sz bytes.
+ *
+ * Si hay un error se retorna -1.
+ *
+ * Si no hubo un error pero el socket se cerro durante el envio/recibo
+ * de los bytes y algunos bytes fueron enviados/recibidos,
+ * se retorna -1 también.
+ *
+ * Si en cambio ningún byte se pudo enviar/recibir, se retorna 0.
+ *
+ * En ambos casos, donde el socket se cerró, `was_closed` es puesto a `true`.
+ *
+ * En caso de éxito se retorna la misma cantidad de bytes pedidos
+ * para envio/recibo, lease `sz`.
+ *
+ * */
+int socket_sendall(
+        struct socket_t *self,
+        const void *data,
+        unsigned int sz,
+        bool *was_closed);
+int socket_recvall(
+        struct socket_t *self,
+        void *data,
+        unsigned int sz,
+        bool *was_closed);
+
+/*
  * Cierra la conexión ya sea parcial o completamente.
  * Lease manpage de `shutdown`
  * */

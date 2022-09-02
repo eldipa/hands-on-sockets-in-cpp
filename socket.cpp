@@ -143,7 +143,7 @@ int socket_sendsome(
          * */
         if (errno == EPIPE) {
             /*
-             * Puede o no ser un error (véase el comentario en recvsome())
+             * Puede o no ser un error (véase el comentario en `socket_recvsome`)
              * */
             *was_closed = true;
             return 0;
@@ -162,6 +162,72 @@ int socket_sendsome(
     } else {
         return s;
     }
+}
+
+int socket_recvall(
+        struct socket_t *self,
+        void *data,
+        unsigned int sz,
+        bool *was_closed) {
+    unsigned int received = 0;
+    *was_closed = false;
+
+    while (received < sz) {
+        int s = socket_recvsome(
+                self,
+                (char*)data + received,
+                sz - received,
+                was_closed);
+
+        if (s <= 0) {
+            /*
+             * Si el socket fue cerrado (`s == 0`) o hubo un error (`s == -1`)
+             * `socket_recvsome` ya debería haber seteado `was_closed`
+             * y haber notificado el error.
+             *
+             * Nosotros podemos entonces meramente retornar
+             *  - error (-1) si recibimos algunos bytes pero no todos los pedidos
+             *  - error (-1) si `socket_recvsome` falló con error.
+             *  - end of stream (0) si es lo q recibimos de `socket_recvsome`
+             * */
+            return (received ? -1 : s);
+        } else {
+            /*
+             * OK, recibimos algo pero no necesariamente todo lo que
+             * esperamos. La condición del `while` checkea eso justamente.
+             * */
+            received += s;
+        }
+    }
+
+    return sz;
+}
+
+
+int socket_sendall(
+        struct socket_t *self,
+        const void *data,
+        unsigned int sz,
+        bool *was_closed) {
+    unsigned int sent = 0;
+    *was_closed = false;
+
+    while (sent < sz) {
+        int s = socket_sendsome(
+                self,
+                (char*)data + sent,
+                sz - sent,
+                was_closed);
+
+        /* Véase los comentarios de `socket_recvall` */
+        if (s <= 0) {
+            return (sent ? -1 : s);
+        } else {
+            sent += s;
+        }
+    }
+
+    return sz;
 }
 
 int socket_shutdown(struct socket_t *self, int how) {

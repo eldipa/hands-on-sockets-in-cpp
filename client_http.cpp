@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstring>
 #include <cerrno>
+#include <cctype>
 
 /*
  * Este programa es un mini cliente HTTP que se conecta a un servidor
@@ -50,15 +51,16 @@ int main(int argc, char *argv[]) {
 
     /*
      * Con el socket creado y conectado, ahora enviamos el request HTTP
-     * con `send`.
+     * con `socket_sendall`.
      *
-     * El sistema operativo podría **no enviar todo lo que le pedimos
-     * enviar**. Los sockets pueden enviar **menos** data.
-     * Esto lo vamos a tener que arreglar en un próximo commit....
+     * `socket_sendall` se encarga de llamar a `send` varias veces hasta
+     * lograr enviar todo lo pedido o fallar.
      *
+     * Esta es la manera de asegurarse el envío completo de los
+     * datos ante un short-write.
      * */
     bool was_closed;
-    s = socket_sendsome(&skt, req, sizeof(req) - 1, &was_closed);
+    s = socket_sendall(&skt, req, sizeof(req) - 1, &was_closed);
 
     if (was_closed) {
         /*
@@ -92,49 +94,55 @@ int main(int argc, char *argv[]) {
     /*
      * Ahora recibimos la respuesta.
      *
-     * El sistema operativo podría **no darnos todo lo que le pedimos
-     * recibir**. Los sockets pueden recibir **menos** data.
-     * Esto lo vamos a tener que arreglar en un próximo commit....
+     * Al igual que `send`, el `recv` puede recibir menos bytes de
+     * los pedidos.
      *
+     * `recv` sufre de short-reads.
+     *
+     * Si quisiéramos bloquearnos hasta leer por completo la
+     * página web deberíamos llamar a `socket_recvall` que implementa
+     * el loop y resuelve el short-read.
+     *
+     * Sin embargo, para que queremos leer toda la página
+     * y solo luego trabajar? Por que no leer lo que se pueda,
+     * imprimir y volver a loopear? Seria más eficiente!
+     *
+     * Realmente no necesitamos toda la página hasta poder
+     * imprimirla. Podemos ir imprimiéndola a medida que nos
+     * llega.
+     *
+     * El short-read no es un bug, es un feature!
+     *
+     * Por eso aquí usamos `socket_recvsome` y no `socket_recvall`.
      * */
-    char buf[512] = {0};
-    s = socket_recvsome(&skt, buf, sizeof(buf) - 1, &was_closed);
-    if (was_closed) {
+    printf("Page:\n");
+    while (not was_closed) {
+        char buf[512] = {0};
+        s = socket_recvsome(&skt, buf, sizeof(buf) - 1, &was_closed);
+        if (was_closed) {
+            break;
+        }
+
+        if (s == -1) {
+            /*
+             * 99% casi seguro que es un error
+             * */
+            perror("socket recv failed");
+            return s;
+        }
+
         /*
-         * Detectamos que la conexión se cerró (el servidor cerró la conexión
-         * de forma ordenada con un `shutdown`).
-         *
-         * Puede ser o no un error, dependerá del protocolo.
-         *
-         * El protocolo HTTP sin embargo no es así y un cierre
-         * marca un error ya que esperábamos recibir una página web.
+         * Pregunta: está garantizado que `buf` tiene un `\0` al final? Quien lo
+         * garantiza?
+         * (este for-loop no tiene nada que ver con los sockets)
          * */
-        printf("The connection was closed by the other end.\n");
-        return -1;
+        for (int i = 0; buf[i]; ++i)
+            if (not isascii(buf[i]))
+                buf[i] = '@';
+
+        printf("%s", buf);
     }
-
-    if (s == -1) {
-        /*
-         * 99% casi seguro que es un error sea por que hubo
-         * un error en la comunicación o por que el servidor
-         * hizo un cierre desordenado.
-         * */
-        perror("socket recv failed");
-        return s;
-    }
-
-
-    /*
-     * Si `recv` retorno un número positivo, esta es la cantidad
-     * de bytes que realmente fueron recibidos.
-     *
-     * Si llegase haber más data nos la estaríamos perdiendo.
-     *
-     * **Muy probablemente** no vamos a recibir toda la página web.
-     *
-     * Esto lo vamos a tener que arreglar en un próximo commit....
-     * */
-    printf("Page:\n%s\n", buf);
+    printf("\n");
 
     /*
      * Liberamos los recursos.
