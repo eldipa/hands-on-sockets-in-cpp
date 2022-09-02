@@ -11,13 +11,13 @@
  * Por simplificación este TDA se enfocara solamente
  * en direcciones IPv4 para TCP.
  * */
-struct resolver_t {
+class resolver_t {
     private:
     struct addrinfo *result;
     struct addrinfo *_next;
 
     public:
-/* Inicializa la estructura y resuelve el dado nombre del host y servicio.
+/* Inicializa el objeto y resuelve el dado nombre del host y servicio.
  *
  * Si `is_passive` es `true` y `hostname` es `nullptr`,
  * las direcciones retornadas serán aptas para hacer un `bind`

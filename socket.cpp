@@ -15,7 +15,7 @@
 int socket_t::init_for_connection(
         const char *hostname,
         const char *servname) {
-    struct resolver_t resolver;
+    class resolver_t resolver;
     int s = resolver.init(hostname, servname, false);
     if (s == -1)
         return -1;
@@ -93,7 +93,7 @@ int socket_t::init_for_connection(
 }
 
 int socket_t::init_for_listen(const char *servname) {
-    struct resolver_t resolver;
+    class resolver_t resolver;
     int s = resolver.init(nullptr, servname, true);
     if (s == -1)
         return -1;
@@ -335,14 +335,14 @@ int socket_t::sendall(
     return sz;
 }
 
-int socket_t::init_with_file_descriptor(struct socket_t *peer, int skt) {
+int socket_t::init_with_file_descriptor(class socket_t *peer, int skt) {
     peer->skt = skt;
     peer->closed = false;
 
     return 0;
 }
 
-int socket_t::accept(struct socket_t *peer) {
+int socket_t::accept(class socket_t *peer) {
     /*
      * `accept` nos bloqueara hasta que algún cliente se conecte a nosotros
      * y la conexión se establezca.

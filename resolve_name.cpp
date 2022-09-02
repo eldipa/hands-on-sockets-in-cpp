@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
      * por nosotros y retornar un único código que en C (así como en Golang)
      * tenemos que chequear nosotros.
      * */
-    struct resolver_t resolver;
+    class resolver_t resolver;
     int s = resolver.init(hostname, servname, false);
     if (s == -1)
         return -1;

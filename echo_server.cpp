@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
      * uno para escuchar y aceptar y luego N sockets para sus
      * N clientes.
      * */
-    struct socket_t peer, srv;
+    class socket_t peer, srv;
     s = srv.init_for_listen(servname);
     if (s == -1)
         goto listen_failed;

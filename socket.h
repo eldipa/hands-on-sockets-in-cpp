@@ -6,7 +6,7 @@
  * Por simplificación este TDA se enfocará solamente
  * en sockets IPv4 para TCP.
  * */
-struct socket_t {
+class socket_t {
     private:
     int skt;
     bool closed;
@@ -17,7 +17,7 @@ struct socket_t {
      * No queremos que el código del usuario este manipulando el file descriptor,
      * queremos q interactúe con él *solo* a través de `socket_t`.
      * */
-    int init_with_file_descriptor(struct socket_t *peer, int skt);
+    int init_with_file_descriptor(class socket_t *peer, int skt);
 
     public:
 /*
@@ -108,7 +108,7 @@ int recvall(
  *
  * Retorna -1 en caso de error, 0 de otro modo.
  * */
-int accept(struct socket_t *peer);
+int accept(class socket_t *peer);
 
 /*
  * Cierra la conexión ya sea parcial o completamente.
