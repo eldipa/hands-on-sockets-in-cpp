@@ -115,20 +115,45 @@ int socket_sendsome(
         unsigned int sz,
         bool *was_closed) {
     *was_closed = false;
+    /*
+     * Cuando se hace un send, el sistema operativo puede aceptar
+     * la data pero descubrir luego que el socket fue cerrado
+     * por el otro endpoint quedando la data sin enviar.
+     *
+     * Esto se lo conoce como "tubería rota" o "broken pipe".
+     *
+     * En Linux, el sistema operativo envía una señal (`SIGPIPE`) que
+     * si no es manejada termina matando al proceso.
+     * Manejo de señales esta fuera del alcance de este proyecto.
+     *
+     * Por suerte si le pasamos a send el flag `MSG_NOSIGNAL`
+     * la señal `SIGPIPE` no es enviada y por ende no nos matara el proceso.
+     *
+     * Esta en nosotros luego hace el chequeo correspondiente
+     * (ver más abajo).
+     * */
     int s = send(self->skt, (char*)data, sz, MSG_NOSIGNAL);
     if (s == -1) {
         /*
-         * O bien detectamos que la conexión se cerró (el servidor cerró
-         * la conexión) o bien detectamos un error en la comunicación.
+         * Este es un caso especial: cuando enviamos algo pero en el medio
+         * se detecta un cierre del socket no se sabe bien cuanto se logro
+         * enviar (y fue recibido por el peer) y cuanto se perdió.
          *
-         * Que el servidor cierre la conexión puede ser o no un error,
-         * dependerá del protocolo.
-         *
-         * Este código hay que arreglarlo por que no distingue
-         * una cierre de un error. Por ahora supondré que es un cierre.
+         * Este es el famoso broken pipe.
+         * */
+        if (errno == EPIPE) {
+            /*
+             * Puede o no ser un error (véase el comentario en recvsome())
+             * */
+            *was_closed = true;
+            return 0;
+        }
+
+        /* En cualquier otro caso supondremos un error
+         * y retornamos -1.
          * */
         *was_closed = true;
-        return 0;
+        return -1;
     } else if (s == 0) {
         /*
          * Jamas debería pasar.
