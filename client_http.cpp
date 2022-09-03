@@ -1,16 +1,16 @@
 #include "socket.h"
 
+#include <iostream>
+#include <exception>
 #include <cstdio>
-#include <cassert>
 #include <cstring>
-#include <cerrno>
 #include <cctype>
 
 /*
  * Este programa es un mini cliente HTTP que se conecta a un servidor
  * (www.google.com.ar) y le pide una página web y la imprime por pantalla.
  * */
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) { try {
     int ret = -1;
     int s = -1;
 
@@ -149,4 +149,13 @@ int main(int argc, char *argv[]) {
      * */
     ret = 0;
     return ret;
-}
+} catch (const std::exception& err) {
+    std::cerr
+        << "Something went wrong and an exception was caught: "
+        << err.what()
+        << "\n";
+    return -1;
+} catch (...) {
+    std::cerr << "Something went wrong and an unknown exception was caught.\n";
+    return -1;
+} }

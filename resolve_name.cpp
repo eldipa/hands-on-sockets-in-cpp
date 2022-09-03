@@ -1,4 +1,6 @@
 #include "resolver.h"
+#include <exception>
+#include <iostream>
 
 /*
  * Includes necesarios para `inet_ntoa`
@@ -9,7 +11,6 @@
 
 #include <cstdio>
 #include <cstring>
-#include <cerrno>
 
 /*
  * Modo de uso:
@@ -26,7 +27,7 @@
  * también se imprime el puerto TCP.
  *
  * */
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) { try {
     const char *hostname = NULL;
     const char *servname = NULL;
 
@@ -90,4 +91,13 @@ int main(int argc, char *argv[]) {
     }
 
     return 0;
-}
+} catch (const std::exception& err) {
+    std::cerr
+        << "Something went wrong and an exception was caught: "
+        << err.what()
+        << "\n";
+    return -1;
+} catch (...) {
+    std::cerr << "Something went wrong and an unknown exception was caught.\n";
+    return -1;
+} }

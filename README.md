@@ -86,7 +86,7 @@ en la red (DNS) terminan en error:
 
 ```shell
 $ ./resolve_name 127.0.0.1 esto-no-es-un-servicio
-Host/service name resolution failed (getaddrinfo): <...>
+Something went wrong and an exception was caught: Servname not supported<...>
 ```
 
 `getaddrinfo` soporta perfectamente tanto IPv4 como IPv6,

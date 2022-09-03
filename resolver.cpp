@@ -1,4 +1,6 @@
 #include "resolver.h"
+#include "resolvererror.h"
+#include "liberror.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -58,49 +60,28 @@ Resolver::Resolver(
      *
      * Si `s != EAI_SYSTEM`, entonces el valor de retorno debe ser
      * inspeccionado con `gai_strerror`.
-     *
-     * Lo siguiente a continuación es una muy primitiva y simplificada
-     * forma de manejo de errores. Ya lo mejoraremos.
      * */
     if (s != 0) {
         if (s == EAI_SYSTEM) {
             /*
              * Como `errno` es global y puede ser modificada por *cualquier* otra
              * función, es *importantísimo* copiarla apenas detectemos el error.
-             * De otro modo nos arriesgamos a que cualquier otra función
-             * que llamemos, como `printf`, pueda pisarnos la variable y
-             * y perdamos el código del error.
-             */
-            int saved_errno = errno;
-
-            /*
-             * Podemos usar `strerror` para traducir ese código de error
-             * en un mensaje por un humano y así imprimirlo.
              *
-             * `strerror` *no* es thread-safe así que esto es solo una
-             * version draft y *no* debería ser usado (la version thread-safe
-             * es `strerror_r`)
-             * */
-            printf(
-                    "Host/service name resolution failed (getaddrinfo): %s\n",
-                    strerror(saved_errno));
+             * En este caso, `LibError` lo hara por nosotros.
+             */
+            throw LibError(
+                    errno,
+                    "Name resolution failed for hostname '%s' y servname '%s'",
+                    (hostname ? hostname : ""),
+                    (servname ? servname : ""));
 
         } else {
             /*
              * La documentación de `getaddrinfo` dice que en este caso
              * debemos usar `gai_strerror` para obtener el mensaje de error.
              * */
-            printf(
-                    "Host/service name resolution failed (getaddrinfo): %s\n",
-                    gai_strerror(s));
+            throw ResolverError(s);
         }
-
-        /*
-         * Finalizamos el programa. Esto lo podemos hacer sin problemas
-         * ya que al fallar `getaddrinfo` este *no* reservo ningún recurso
-         * y por lo tanto *no* tenemos que liberar ninguno.
-         * */
-        throw -1;
     }
 
     this->_next = this->result;
