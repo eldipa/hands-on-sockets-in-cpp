@@ -2,9 +2,6 @@
 
 #include <iostream>
 #include <exception>
-#include <cstdio>
-#include <cstring>
-#include <cctype>
 
 /*
  * Este programa es un mini cliente HTTP que se conecta a un servidor
@@ -37,7 +34,9 @@ int main(int argc, char *argv[]) { try {
                        "\r\n";
 
     if (argc != 1) {
-        printf("Bad program call. Expected %s without arguments.\n", argv[0]);
+        std::cerr << "Bad program call. Expected "
+                  << argv[0]
+                  << " without arguments.\n";
         return ret;
     }
 
@@ -72,7 +71,7 @@ int main(int argc, char *argv[]) { try {
          * El protocolo HTTP sin embargo no es así y un cierre
          * marca un error.
          * */
-        printf("The connection was closed by the other end.\n");
+        std::cout << "The connection was closed by the other end.\n";
         return ret;
     }
 
@@ -80,7 +79,7 @@ int main(int argc, char *argv[]) { try {
      * El valor de retorno de `send`, si es un número positivo,
      * es la cantidad de bytes que realmente se pudieron enviar.
      * */
-    printf("Sent %d bytes\n", s);
+    std::cout << "Sent " << s << " bytes\n";
 
 
     /*
@@ -107,7 +106,7 @@ int main(int argc, char *argv[]) { try {
      *
      * Por eso aquí usamos `Socket::recvsome` y no `Socket::recvall`.
      * */
-    printf("Page:\n");
+    std::cout << "Page:\n";
     while (not was_closed) {
         char buf[512] = {0};
         skt.recvsome(buf, sizeof(buf) - 1, &was_closed);
@@ -124,9 +123,9 @@ int main(int argc, char *argv[]) { try {
             if (not isascii(buf[i]))
                 buf[i] = '@';
 
-        printf("%s", buf);
+        std::cout << buf;
     }
-    printf("\n");
+    std::cout << "\n";
 
     /*
      * Si llegamos hasta acá es por que no nos topamos con ningún error

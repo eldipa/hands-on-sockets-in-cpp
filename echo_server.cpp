@@ -33,9 +33,9 @@ int main(int argc, char *argv[]) { try {
     if (argc == 2) {
         servname = argv[1];
     } else {
-        printf(
-                "Bad program call. Expected %s <servname>\n",
-                argv[0]);
+        std::cerr << "Bad program call. Expected "
+                << argv[0]
+                << " <servname>\n";
         return ret;
     }
 

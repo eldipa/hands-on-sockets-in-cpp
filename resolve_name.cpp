@@ -9,9 +9,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include <cstdio>
-#include <cstring>
-
 /*
  * Modo de uso:
  *
@@ -37,9 +34,10 @@ int main(int argc, char *argv[]) { try {
         hostname = argv[1];
         servname = argv[2];
     } else {
-        printf(
-                "Bad program call. Expected %s <hostname> [<servname>]\n",
-                argv[0]);
+        std::cerr <<
+                "Bad program call. Expected "
+                << argv[0]
+                << " <hostname> [<servname>]\n";
         return -1;
     }
 
@@ -84,10 +82,11 @@ int main(int argc, char *argv[]) { try {
          * */
         uint16_t port = ntohs(skt_addr->sin_port);
 
+        std::cout << "IPv4: " << inet_ntoa(internet_addr);
         if (port)
-            printf("IPv4: %s (port %d)\n", inet_ntoa(internet_addr), port);
-        else
-            printf("IPv4: %s\n", inet_ntoa(internet_addr));
+            std::cout << " (port " << port << ")";
+
+        std::cout << "\n";
     }
 
     return 0;
