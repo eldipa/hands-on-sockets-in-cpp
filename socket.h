@@ -55,6 +55,30 @@ explicit Socket(const char *servname);
  * */
 Socket();
 
+/*
+ * Deshabilitamos el constructor por copia y operador asignación por copia
+ * ya que no queremos que se puedan copiar objetos `Socket`.
+ *
+ * Se podrían copiar?, no. Si bien un `Socket` el un `int` y un `bool` y seria
+ * trivial copiarlo, conceptualmente ese `int` no es meramente un número
+ * sino un file descriptor, un identificador que tiene asociado varios
+ * recursos del lado del sistema operativo.
+ *
+ * Copiar un `int` no implica que esos recursos son copiados (es como
+ * copiar un puntero y pretender que el objeto apuntado se copie mágicamente).
+ *
+ * Más aun no tiene sentido pensar en copiar un socket. Un socket
+ * representa una conexión algo q no se puede copiar.
+ *
+ * Lo mismo pasa con otros recursos. Un archivo referenciado por `FILE*`.
+ * Copiar ese puntero no implica que realmente tendrás una copia del archivo
+ * en tu disco rígido.
+ *
+ * Por eso deshabilitamos la copia. No tiene sentido.
+ * */
+Socket(const Socket&) = delete;
+Socket& operator=(const Socket&) = delete;
+
 /* `Socket::sendsome` lee hasta `sz` bytes del buffer y los envía. La función
  * puede enviar menos bytes sin embargo.
  *

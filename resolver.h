@@ -30,6 +30,15 @@ Resolver(
         const char* servname,
         bool is_passive);
 
+/*
+ * Deshabilitamos el constructor por copia y operador asignación por copia
+ * ya que no queremos que se puedan copiar objetos `Resolver`.
+ *
+ * Se podrían copiar?, sí, pero no le veo mucha utilidad y prefiero
+ * evitarlo.
+ * */
+Resolver(const Resolver&) = delete;
+Resolver& operator=(const Resolver&) = delete;
 
 /* Retorna si hay o no una dirección siguiente para testear.
  * Si la hay, se deberá llamar a `Resolver::next()` para obtenerla.
