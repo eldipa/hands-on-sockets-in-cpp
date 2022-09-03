@@ -12,12 +12,9 @@ class Socket {
     bool closed;
 
     /*
-     * Inicializa el socket pasándole directamente el file descriptor.
-     *
-     * No queremos que el código del usuario este manipulando el file descriptor,
-     * queremos q interactúe con él *solo* a través de `Socket`.
+     * Construye el socket pasándole directamente el file descriptor.
      * */
-    int init_with_file_descriptor(Socket *peer, int skt);
+    explicit Socket(int skt);
 
     public:
 /*
@@ -47,13 +44,6 @@ Socket(
         const char *servname);
 
 explicit Socket(const char *servname);
-
-/*
- * Constructor por default de `Socket`. Inicializa el socket como si no estuviese
- * conectado. La única utilidad de construir sockets con este constructor está
- * en pasarlos por `Socket::accept` y que sea dicho método quien lo conecte.
- * */
-Socket();
 
 /*
  * Deshabilitamos el constructor por copia y operador asignación por copia
@@ -137,15 +127,12 @@ int recvall(
         bool *was_closed);
 
 /*
- * Acepta una conexión entrante e inicializa con ella el socket peer.
+ * Acepta una conexión entrante y retorna un nuevo socket
+ * construido a partir de ella.
  *
- * Dicho socket peer debe estar *sin* inicializar y si `Socket::accept` es
- * exitoso, se debe llamar a `Socket::shutdown`, `Socket::close` y
- * `Socket::deinit` sobre él.
- *
- * Retorna -1 en caso de error, 0 de otro modo.
+ * En caso de error, se lanza una excepción.
  * */
-int accept(Socket *peer);
+Socket accept();
 
 /*
  * Cierra la conexión ya sea parcial o completamente.

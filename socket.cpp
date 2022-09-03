@@ -185,11 +185,6 @@ Socket::Socket(const char *servname) {
     throw -1;
 }
 
-Socket::Socket() {
-    this->skt = -1;
-    this->closed = false;
-}
-
 Socket::Socket(Socket&& other) {
     /* Nos copiamos del otro socket... */
     this->skt = other.skt;
@@ -379,14 +374,12 @@ int Socket::sendall(
     return sz;
 }
 
-int Socket::init_with_file_descriptor(Socket *peer, int skt) {
-    peer->skt = skt;
-    peer->closed = false;
-
-    return 0;
+Socket::Socket(int skt) {
+    this->skt = skt;
+    this->closed = false;
 }
 
-int Socket::accept(Socket *peer) {
+Socket Socket::accept() {
     /*
      * `accept` nos bloqueara hasta que algún cliente se conecte a nosotros
      * y la conexión se establezca.
@@ -401,24 +394,16 @@ int Socket::accept(Socket *peer) {
      * */
     int peer_skt = ::accept(this->skt, nullptr, nullptr);
     if (peer_skt == -1)
-        return -1;
+        throw -1;
 
     /*
      * `peer_skt` es un file descriptor crudo y no queremos
      * que nuestro cliente manipule recursos crudos sino que
      * los use a través de un TDA.
      *
-     * Por eso inicializamos el TDA `peer` con el nuevo file
-     * descriptor.
-     *
-     * Nota: `peer` debe ser un `Socket` *sin inicializar*
-     * para que seamos nosotros quienes lo inicializamos aquí.
+     * Por eso creamos un `Socket` y lo pasamos por movimiento
      * */
-    int s = init_with_file_descriptor(peer, peer_skt);
-    if (s == -1)
-        return -1;
-
-    return 0;
+    return Socket(peer_skt);
 }
 
 int Socket::shutdown(int how) {

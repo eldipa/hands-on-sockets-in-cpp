@@ -25,7 +25,6 @@
  **/
 int main(int argc, char *argv[]) {
     int ret = -1;
-    int s = -1;
     bool was_closed = false;
 
     const char *servname = NULL;
@@ -49,17 +48,15 @@ int main(int argc, char *argv[]) {
      * uno para escuchar y aceptar y luego N sockets para sus
      * N clientes.
      * */
-    Socket peer, srv(servname);
+    Socket srv(servname);
 
     /*
      * Bloqueamos el programa hasta q haya una conexión entrante
      * y sea aceptada. Hablaremos (`send`/`recv`) con ese cliente
      * conectado en particular usando un socket distinto, el `peer`,
-     * inicializado aquí.
+     * construido aquí.
      * */
-    s = srv.accept(&peer);
-    if (s == -1)
-        return ret;
+    Socket peer = srv.accept();
 
     /*
      * A partir de aquí podríamos volver a usar `srv` para aceptar
@@ -102,6 +99,7 @@ int main(int argc, char *argv[]) {
             return ret;
         }
 
+        int s = -1;
         s = peer.sendall(buf, sz, &was_closed);
 
         if (was_closed)
