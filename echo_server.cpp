@@ -92,24 +92,10 @@ int main(int argc, char *argv[]) { try {
         if (was_closed)
             break;
 
-        if (sz == -1) {
-            /*
-             * 99% casi seguro que es un error
-             * */
-            perror("socket recv failed");
-            return ret;
-        }
-
-        int s = -1;
-        s = peer.sendall(buf, sz, &was_closed);
+        peer.sendall(buf, sz, &was_closed);
 
         if (was_closed)
             break;
-
-        if (s == -1) {
-            perror("socket send failed");
-            return ret;
-        }
     }
 
     ret = 0;

@@ -85,8 +85,10 @@ Socket& operator=(Socket&&);
  * Si el socket detecto que la conexión fue cerrada, la variable
  * `was_closed` es puesta a `true`, de otro modo sera `false`.
  *
- * Retorna 0 si se cerro el socket, -1 si hubo un error
+ * Retorna 0 si se cerro el socket,
  * o positivo que indicara cuantos bytes realmente se enviaron/recibieron.
+ *
+ * Si hay un error se lanza una excepción.
  *
  * Lease manpage de `send` y `recv`
  * */
@@ -103,11 +105,11 @@ int recvsome(
  * `Socket::sendall` envía exactamente `sz` bytes leídos del buffer, ni más,
  * ni menos. `Socket::recvall` recibe exactamente sz bytes.
  *
- * Si hay un error se retorna -1.
+ * Si hay un error se lanza una excepción.
  *
  * Si no hubo un error pero el socket se cerro durante el envio/recibo
  * de los bytes y algunos bytes fueron enviados/recibidos,
- * se retorna -1 también.
+ * se lanza también una excepción.
  *
  * Si en cambio ningún byte se pudo enviar/recibir, se retorna 0.
  *
@@ -138,7 +140,7 @@ Socket accept();
  * Cierra la conexión ya sea parcial o completamente.
  * Lease manpage de `shutdown`
  * */
-int shutdown(int how);
+void shutdown(int how);
 
 /*
  * Cierra el socket. El cierre no implica un `shutdown`

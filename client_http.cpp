@@ -76,12 +76,6 @@ int main(int argc, char *argv[]) { try {
         return ret;
     }
 
-    assert(s != 0);
-    if (s == -1) {
-        perror("socket send failed");
-        return ret;
-    }
-
     /*
      * El valor de retorno de `send`, si es un número positivo,
      * es la cantidad de bytes que realmente se pudieron enviar.
@@ -116,17 +110,9 @@ int main(int argc, char *argv[]) { try {
     printf("Page:\n");
     while (not was_closed) {
         char buf[512] = {0};
-        s = skt.recvsome(buf, sizeof(buf) - 1, &was_closed);
+        skt.recvsome(buf, sizeof(buf) - 1, &was_closed);
         if (was_closed) {
             break;
-        }
-
-        if (s == -1) {
-            /*
-             * 99% casi seguro que es un error
-             * */
-            perror("socket recv failed");
-            return ret;
         }
 
         /*
