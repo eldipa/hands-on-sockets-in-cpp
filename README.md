@@ -102,7 +102,6 @@ al lector como challenge.
 
 ```shell
 $ ./client_http
-Sent 75 bytes
 Page:
 HTTP/1.1 200 OK<...>
 ```

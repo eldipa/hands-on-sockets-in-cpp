@@ -1,4 +1,4 @@
-#include "socket.h"
+#include "http_protocol.h"
 
 #include <iostream>
 #include <exception>
@@ -9,29 +9,6 @@
  * */
 int main(int argc, char *argv[]) { try {
     int ret = -1;
-    int s = -1;
-
-    /*
-     * HTTP/1.1 es un protocolo de texto en donde el cliente (nosotros)
-     * le hace un pedido a un servidor (Google).
-     *
-     * Que clase de pedido dependerá del servidor pero tradicionalmente
-     * se soportan obtener un recurso (GET), guardar uno nuevo (PUT),
-     * actualizarlo (POST) y borrarlo (DELETE).
-     *
-     * Exactamente que es un "recurso" depende del servidor. Para Google
-     * un recurso es una página web HTML. Para muchos servidores HTTP
-     * sucede lo mismo pero no te confundas: nada te impide usar HTTP
-     * para otros fines que no sean paginas web HTML.
-     *
-     * En este ejemplo nos limitaremos únicamente a pedir la home-page
-     * de Google.
-     * */
-    const char req[] = "GET / HTTP/1.1\r\n"
-                       "Accept: */*\r\n"
-                       "Connection: close\r\n"
-                       "Host: www.google.com.ar\r\n"
-                       "\r\n";
 
     if (argc != 1) {
         std::cerr << "Bad program call. Expected "
@@ -41,91 +18,29 @@ int main(int argc, char *argv[]) { try {
     }
 
     /*
-     * El TDA `Socket` se encargara de resolver el hostname/service name
+     * El TDA `HTTPProtocol` se encargara de resolver el hostname/service name
      * y se conectará a dicho server via TCP/IP.
+     *
+     * Nuestro código no tendrá que lidiar ni saber de sockets ni del
+     * protocolo HTTP.
+     *
+     * Nuestro código meramente usara los conceptos de alto nivel
+     * y el como hablar con el server sera trabajo del protocolo.
+     *
+     * Mantene siempre el código separado!
      * */
-    Socket skt("www.google.com.ar", "http");
+    HTTPProtocol http("www.google.com.ar");
 
     /*
-     * Con el socket creado y conectado, ahora enviamos el request HTTP
-     * con `Socket::sendall`.
-     *
-     * `Socket::sendall` se encarga de llamar a `send` varias veces hasta
-     * lograr enviar todo lo pedido o fallar.
-     *
-     * Esta es la manera de asegurarse el envío completo de los
-     * datos ante un short-write.
+     * Enviamos el request GET pidiéndole al servidor (Google) que
+     * nos de el recurso `"/"` (la página web principal).
      * */
-    bool was_closed;
-    s = skt.sendall(req, sizeof(req) - 1, &was_closed);
-
-    if (was_closed) {
-        /*
-         * Que el servidor cierre la conexión puede ser o no un error,
-         * dependerá del protocolo.
-         *
-         * Algún protocolo podría decir "luego de enviar un request
-         * la conexión se cerrara" en cuyo caso el cierre del socket
-         * no es un error sino algo esperado.
-         *
-         * El protocolo HTTP sin embargo no es así y un cierre
-         * marca un error.
-         * */
-        std::cout << "The connection was closed by the other end.\n";
-        return ret;
-    }
-
-    /*
-     * El valor de retorno de `send`, si es un número positivo,
-     * es la cantidad de bytes que realmente se pudieron enviar.
-     * */
-    std::cout << "Sent " << s << " bytes\n";
-
+    http.async_get("/");
 
     /*
      * Ahora recibimos la respuesta.
-     *
-     * Al igual que `send`, el `recv` puede recibir menos bytes de
-     * los pedidos.
-     *
-     * `recv` sufre de short-reads.
-     *
-     * Si quisiéramos bloquearnos hasta leer por completo la
-     * página web deberíamos llamar a `Socket::recvall` que implementa
-     * el loop y resuelve el short-read.
-     *
-     * Sin embargo, para que queremos leer toda la página
-     * y solo luego trabajar? Por que no leer lo que se pueda,
-     * imprimir y volver a loopear? Seria más eficiente!
-     *
-     * Realmente no necesitamos toda la página hasta poder
-     * imprimirla. Podemos ir imprimiéndola a medida que nos
-     * llega.
-     *
-     * El short-read no es un bug, es un feature!
-     *
-     * Por eso aquí usamos `Socket::recvsome` y no `Socket::recvall`.
      * */
-    std::cout << "Page:\n";
-    while (not was_closed) {
-        char buf[512] = {0};
-        skt.recvsome(buf, sizeof(buf) - 1, &was_closed);
-        if (was_closed) {
-            break;
-        }
-
-        /*
-         * Pregunta: está garantizado que `buf` tiene un `\0` al final? Quien lo
-         * garantiza?
-         * (este for-loop no tiene nada que ver con los sockets)
-         * */
-        for (int i = 0; buf[i]; ++i)
-            if (not isascii(buf[i]))
-                buf[i] = '@';
-
-        std::cout << buf;
-    }
-    std::cout << "\n";
+    std::cout << "Page:\n" << http.wait_response(true) << "\n";
 
     /*
      * Si llegamos hasta acá es por que no nos topamos con ningún error
