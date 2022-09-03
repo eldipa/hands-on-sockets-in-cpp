@@ -190,6 +190,53 @@ Socket::Socket() {
     this->closed = false;
 }
 
+Socket::Socket(Socket&& other) {
+    /* Nos copiamos del otro socket... */
+    this->skt = other.skt;
+    this->closed = other.closed;
+
+    /* ...pero luego le sacamos al otro socket
+     * el ownership del recurso.
+     * Efectivamente el ownership pasó de él
+     * a nosotros: el ownership se movió.
+     *
+     * En el caso de `Socket` podemos marcar el file
+     * descriptor del otro socket como invalido (-1)
+     * y marcarlo como cerrado (closed).
+     * De esa manera el destructor de `other` no
+     * va a intentar cerrar el file descriptor.
+     * */
+    other.skt = -1;
+    other.closed = true;
+}
+
+Socket& Socket::operator=(Socket&& other) {
+    /* Si el usuario hace algo como tratar de moverse
+     * a si mismo (`skt = skt;`) simplemente no hacemos
+     * nada.
+     * */
+    if (this == &other)
+        return *this;
+
+    /* A diferencia del constructor por movimiento,
+     * `this` (nosotros) es un socket completamente creado
+     * y debemos desinicializarlo primero antes de pisarle
+     * el recurso con el que le robaremos al otro socket (`other`)
+     * */
+    if (not this->closed) {
+        ::shutdown(this->skt, 2);
+        ::close(this->skt);
+    }
+
+    /* Ahora hacemos los mismos pasos que en el move constructor */
+    this->skt = other.skt;
+    this->closed = other.closed;
+    other.skt = -1;
+    other.closed = true;
+
+    return *this;
+}
+
 int Socket::recvsome(
         void *data,
         unsigned int sz,

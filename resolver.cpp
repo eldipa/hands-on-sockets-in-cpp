@@ -106,6 +106,50 @@ Resolver::Resolver(
     this->_next = this->result;
 }
 
+Resolver::Resolver(Resolver&& other) {
+    /* Nos copiamos del otro resolver... */
+    this->result = other.result;
+    this->_next = other._next;
+
+    /* ...pero luego le sacamos al otro resolver
+     * el ownership del recurso.
+     * Efectivamente el ownership pasó de él
+     * a nosotros: el ownership se movió.
+     *
+     * En el caso de `Resolver` podemos marcar los
+     * punteros como `nullptr`.
+     * Tendremos que chequear en el destructor `~Resolver`
+     * este caso y evitar llamar a `freeaddrinfo` si es `nullptr`.
+     * */
+    other.result = nullptr;
+    other._next = nullptr;
+}
+
+Resolver& Resolver::operator=(Resolver&& other) {
+    /* Si el usuario hace algo como tratar de moverse
+     * a si mismo (`resolver = resolver;`) simplemente no hacemos
+     * nada.
+     * */
+    if (this == &other)
+        return *this;
+
+    /* A diferencia del constructor por movimiento,
+     * `this` (nosotros) es un resolver completamente creado
+     * y debemos desinicializarlo primero antes de pisarle
+     * el recurso con el que le robaremos al otro resolver (`other`)
+     * */
+    if (this->result)
+        freeaddrinfo(this->result);
+
+    /* Ahora hacemos los mismos pasos que en el move constructor */
+    this->result = other.result;
+    this->_next = other._next;
+    other.result = nullptr;
+    other._next = nullptr;
+
+    return *this;
+}
+
 bool Resolver::has_next() {
     return this->_next != NULL;
 }
@@ -125,6 +169,7 @@ Resolver::~Resolver() {
      * La manpage dice q debemos usar `freeaddrinfo` para ello y
      * así lo hacemos.
      * */
-    freeaddrinfo(this->result);
+    if (this->result)
+        freeaddrinfo(this->result);
 }
 

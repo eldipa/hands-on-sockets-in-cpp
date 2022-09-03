@@ -40,6 +40,12 @@ Resolver(
 Resolver(const Resolver&) = delete;
 Resolver& operator=(const Resolver&) = delete;
 
+/*
+ * Hacemos que el `Resolver` sea movible.
+ * */
+Resolver(Resolver&&);
+Resolver& operator=(Resolver&&);
+
 /* Retorna si hay o no una dirección siguiente para testear.
  * Si la hay, se deberá llamar a `Resolver::next()` para obtenerla.
  *

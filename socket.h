@@ -79,6 +79,12 @@ Socket();
 Socket(const Socket&) = delete;
 Socket& operator=(const Socket&) = delete;
 
+/*
+ * Hacemos que el `Socket` sea movible.
+ * */
+Socket(Socket&&);
+Socket& operator=(Socket&&);
+
 /* `Socket::sendsome` lee hasta `sz` bytes del buffer y los envía. La función
  * puede enviar menos bytes sin embargo.
  *
