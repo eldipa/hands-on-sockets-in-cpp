@@ -104,6 +104,43 @@ int socket_init_for_listen(
         }
 
         /*
+         * Configuramos al socket para q no falle si la dirección local
+         * en la que queremos levantar el servidor (con el bind)
+         * "estuvo ocupada hace poco".
+         *
+         * Nota el uso del tiempo pasado: "estuvo ocupada hace poco".
+         *
+         * Cuando un servidor cualquiera bind'ea en una dirección/puerto
+         * local, ese puerto queda en el estado LISTEN (o ESCUCHANDO).
+         *
+         * Ningún otro programa puede levantase y escuchar en ese puerto
+         * "que esta siendo usado".
+         *
+         * Cuando dicho programa finaliza, podrías pensar q el puerto
+         * queda libre, pero no.
+         *
+         * Queda en el estado WAIT, una especie de estado tipo
+         * "estuvo ocupado hace poco".
+         *
+         * Recién luego de unos segundos el OS deja realmente libre el puerto.
+         *
+         * Por que? Long story short: el OS no sabe si hay paquetes de red
+         * "aun viajando" hacia el puerto y prefiere reservar el puerto
+         * para evitar q algún otro servidor desprevenido se levanta ahí
+         * y se "morfe" paquetes destinados para el server anterior.
+         *
+         * Con SO_REUSEADDR le decimos al OS q "esta todo bien" si el
+         * puerto aun esta en WAIT, y q nos debe dejar hacer un bind.
+         *
+         * De ahí el nombre "reuse address" o "SO_REUSEADDR".
+         **/
+        int optval = 1;
+        s = setsockopt(skt, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+        if (s == -1) {
+            continue;
+        }
+
+        /*
          * Hacemos le bind: enlazamos el socket a una dirección local.
          * A diferencia de lo que hacemos en `socket_init_for_connection`
          * que obtenemos una dirección de una máquina remota y nos conectamos
