@@ -16,6 +16,21 @@ class Resolver {
     struct addrinfo *result;
     struct addrinfo *_next;
 
+    /*
+     * Checkea que la lista de direcciones (result) sea "valida".
+     *
+     * No hace un checkeo muy exhaustivo, simplemente verifica que
+     * no sea null.
+     *
+     * En un object RAII como este, el atributo result esta siempre
+     * bien definido (distinto de -1) **salvo** cuando es movido.
+     *
+     * Este check es para ayudarte a detectar ese caso y lanzar una
+     * excepción. No es lo más bonito del universo pero te dará una
+     * pista de que puede estar andando mal.
+     * */
+    void chk_addr_or_fail() const;
+
     public:
 /* Crea el objeto y resuelve el dado nombre del host y servicio.
  *

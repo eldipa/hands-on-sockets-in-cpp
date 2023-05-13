@@ -12,6 +12,8 @@
 #include <netdb.h>
 #include <unistd.h>
 
+#include <stdexcept>
+
 Resolver::Resolver(
         const char* hostname,
         const char* servname,
@@ -132,10 +134,12 @@ Resolver& Resolver::operator=(Resolver&& other) {
 }
 
 bool Resolver::has_next() {
+    chk_addr_or_fail();
     return this->_next != NULL;
 }
 
 struct addrinfo* Resolver::next() {
+    chk_addr_or_fail();
     struct addrinfo *ret = this->_next;
     this->_next = ret->ai_next;
     return ret;
@@ -154,3 +158,13 @@ Resolver::~Resolver() {
         freeaddrinfo(this->result);
 }
 
+
+void Resolver::chk_addr_or_fail() const {
+    if (result == nullptr) {
+        throw std::runtime_error(
+                "addresses list is invalid (null), "
+                "perhaps you are using a *previously moved* "
+                "resolver (and therefore invalid)."
+                );
+    }
+}

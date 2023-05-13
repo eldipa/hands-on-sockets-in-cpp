@@ -13,6 +13,8 @@
 #include "resolver.h"
 #include "liberror.h"
 
+#include <stdexcept>
+
 Socket::Socket(
         const char *hostname,
         const char *servname) {
@@ -242,6 +244,7 @@ int Socket::recvsome(
         void *data,
         unsigned int sz,
         bool *was_closed) {
+    chk_skt_or_fail();
     *was_closed = false;
     int s = recv(this->skt, (char*)data, sz, 0);
     if (s == 0) {
@@ -267,6 +270,7 @@ int Socket::sendsome(
         const void *data,
         unsigned int sz,
         bool *was_closed) {
+    chk_skt_or_fail();
     *was_closed = false;
     /*
      * Cuando se hace un send, el sistema operativo puede aceptar
@@ -401,6 +405,7 @@ Socket::Socket(int skt) {
 }
 
 Socket Socket::accept() {
+    chk_skt_or_fail();
     /*
      * `accept` nos bloqueara hasta que algún cliente se conecte a nosotros
      * y la conexión se establezca.
@@ -428,12 +433,14 @@ Socket Socket::accept() {
 }
 
 void Socket::shutdown(int how) {
+    chk_skt_or_fail();
     if (::shutdown(this->skt, how) == -1) {
         throw LibError(errno, "socket shutdown failed");
     }
 }
 
 int Socket::close() {
+    chk_skt_or_fail();
     this->closed = true;
     return ::close(this->skt);
 }
@@ -442,5 +449,15 @@ Socket::~Socket() {
     if (not this->closed) {
         ::shutdown(this->skt, 2);
         ::close(this->skt);
+    }
+}
+
+void Socket::chk_skt_or_fail() const {
+    if (skt == -1) {
+        throw std::runtime_error(
+                "socket with invalid file descriptor (-1), "
+                "perhaps you are using a *previously moved* "
+                "socket (and therefore invalid)."
+                );
     }
 }

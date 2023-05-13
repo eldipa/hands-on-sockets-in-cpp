@@ -16,6 +16,31 @@ class Socket {
      * */
     explicit Socket(int skt);
 
+    /*
+     * Checkea que el file descriptor (skt) sea "valido".
+     *
+     * No hace un checkeo muy exhaustivo, simplemente verifica que
+     * no sea -1.
+     *
+     * En un object RAII como este, el atributo skt esta siempre
+     * bien definido (distinto de -1) **salvo** cuando es movido.
+     *
+     * En teoría una vez movido el objecto, este no puede ser usado
+     * ya q queda invalido.
+     *
+     * En el caso de Socket, al moverse se setea skt a -1.
+     *
+     * En lenguajes como Rust usar un objeto "ya movido" falla
+     * en tiempo de compilación.
+     *
+     * En C++, bueno, es C++ y el comportamiento es indefinido :D.
+     *
+     * Este check es para ayudarte a detectar ese caso y lanzar una
+     * excepción. No es lo más bonito del universo pero te dará una
+     * pista de que puede estar andando mal.
+     * */
+    void chk_skt_or_fail() const;
+
     public:
 /*
  * Constructores para `Socket` tanto para conectarse a un servidor
