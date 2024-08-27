@@ -29,12 +29,35 @@ class HTTPProtocol {
      * el código del protocolo independientemente de la tecnología
      * de comunicación.
      *
-     * En esta implementación de `HTTPProtocol` preferí que sea
-     * el protocolo quien cree el socket.
+     * En esta implementación de `HTTPProtocol` usa la segunda categoría:
+     * `HTTPProtocol` puede o bien crear su propio socket o recibirlo como
+     * parámetro.
      * */
     explicit HTTPProtocol(
             const std::string& hostname,
             const std::string& servname = "http");
+
+    /*
+     * Constructor de `HTTPProtocol` que recibe un `Socket` *ya* conectado.
+     *
+     * Notar que esta implementación va un poco en contra de RAII ya que
+     * ahora es posible que el usuario incorrectamente pase un socket
+     * invalido o que haya sido usado parcialmente (por ejemplo que algunos bytes
+     * fueron leido sin que `HTTPProtocol` lo sepa, lo cual rompe el protocolo).
+     *
+     * Al permitirle al usuario que pase un Socket explícitamente,
+     * le dejamos que él decida que tipo de implementación concreta
+     * de `Socket` quiere usar. Por ahora hay una sola (la clase `Socket`)
+     * pero podría haber varias:
+     *  - un socket que use QUIC over UDP/IP en vez de TCP/IP (cambiaste la tecnología)
+     *  - un socket que encripte todo el tráfico con TLS o SSL (agregaste funcionalidad)
+     *  - un socket de juguete que no envie/reciba nada para testing (permitis el testing).
+     *
+     * Cambiar la implementación te da mucha mas flexibilidad pero con un costo:
+     * tendrás que usar el heap, polimorfismo y punteros y/o templates.
+     * Nada de eso lo veremos en este hands-on, esto queda para más adelante.
+     * */
+    HTTPProtocol(Socket&& skt, const std::string& hostname);
 
     /*
      * API sincrónica para GET.

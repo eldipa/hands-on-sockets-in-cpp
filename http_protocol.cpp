@@ -60,6 +60,22 @@ HTTPProtocol::HTTPProtocol(
     // this->hostname = hostname;
 }
 
+/*
+ * Notar que el parámetro es `Socket&&` y no `Socket&`
+ * Ese `&&` *no* implica que movemos al socket (move semantics) pero le
+ * avisa al caller que tenemos la intención de hacerlo.
+ * Es en `std::move` donde se llama al constructor por movimiento
+ * (estrictamente hablando, `std::move` es solo un casteo, pero que fuerza
+ * al compiler a llamar al constructor por movimiento y no el de copia.)
+ * */
+HTTPProtocol::HTTPProtocol(
+        Socket&& skt,
+        const std::string& hostname) :
+    hostname(hostname),  /* <-- construimos un `const std::string` */
+    skt(std::move(skt)) /* <-- movemos el `Socket` y nos hacemos dueño de él. */
+{
+}
+
 void HTTPProtocol::async_get(const std::string& resource) {
     bool was_closed = false;
 

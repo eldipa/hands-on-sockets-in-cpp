@@ -18,10 +18,12 @@ int main(int argc, char *argv[]) { try {
     }
 
     /*
-     * El TDA `HTTPProtocol` se encargara de resolver el hostname/service name
-     * y se conectará a dicho server via TCP/IP.
+     * Nos permitimos romper un poquito la separación de concerns
+     * y dejamos al cliente HTTP que construya él el socket
+     * para luego crear el protocolo.
      *
-     * Nuestro código no tendrá que lidiar ni saber de sockets ni del
+     * Salvo durante esta inicialización,
+     * nuestro código no tendrá que lidiar ni saber de sockets ni del
      * protocolo HTTP.
      *
      * Nuestro código meramente usara los conceptos de alto nivel
@@ -29,7 +31,9 @@ int main(int argc, char *argv[]) { try {
      *
      * Mantene siempre el código separado!
      * */
-    HTTPProtocol http("www.google.com.ar");
+    const std::string hostname = "www.google.com.ar";
+    Socket skt(hostname.c_str(), "http");
+    HTTPProtocol http(std::move(skt), hostname);
 
     /*
      * Enviamos el request GET pidiéndole al servidor (Google) que
