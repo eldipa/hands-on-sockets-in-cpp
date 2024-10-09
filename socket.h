@@ -10,6 +10,7 @@ class Socket {
     private:
     int skt;
     bool closed;
+    int stream_status;
 
     /*
      * Construye el socket pasándole directamente el file descriptor.
@@ -107,8 +108,9 @@ Socket& operator=(Socket&&);
  * en el buffer (que debe estar pre-allocado). La función puede recibir
  * menos bytes sin embargo.
  *
- * Si el socket detecto que la conexión fue cerrada, la variable
- * `was_closed` es puesta a `true`, de otro modo sera `false`.
+ * Si el socket detecto que la conexión fue cerrada, el metodo
+ * `is_stream_send_closed` o `is_stream_recv_closed` (segun corresponda)
+ * retornaran `true`, de otro modo sera `false`.
  *
  * Retorna 0 si se cerro el socket,
  * o positivo que indicara cuantos bytes realmente se enviaron/recibieron.
@@ -119,12 +121,12 @@ Socket& operator=(Socket&&);
  * */
 int sendsome(
         const void *data,
-        unsigned int sz,
-        bool *was_closed);
+        unsigned int sz
+        );
 int recvsome(
         void *data,
-        unsigned int sz,
-        bool *was_closed);
+        unsigned int sz
+        );
 
 /*
  * `Socket::sendall` envía exactamente `sz` bytes leídos del buffer, ni más,
@@ -138,7 +140,9 @@ int recvsome(
  *
  * Si en cambio ningún byte se pudo enviar/recibir, se retorna 0.
  *
- * En ambos casos, donde el socket se cerró, `was_closed` es puesto a `true`.
+ * En ambos casos, donde el socket se cerró,
+ * `is_stream_send_closed` o `is_stream_recv_closed` (segun corresponda)
+ * retornara `true`.
  *
  * En caso de éxito se retorna la misma cantidad de bytes pedidos
  * para envio/recibo, lease `sz`.
@@ -146,12 +150,12 @@ int recvsome(
  * */
 int sendall(
         const void *data,
-        unsigned int sz,
-        bool *was_closed);
+        unsigned int sz
+        );
 int recvall(
         void *data,
-        unsigned int sz,
-        bool *was_closed);
+        unsigned int sz
+        );
 
 /*
  * Acepta una conexión entrante y retorna un nuevo socket
@@ -166,6 +170,14 @@ Socket accept();
  * Lease manpage de `shutdown`
  * */
 void shutdown(int how);
+
+/*
+ * Determina si el stream de envio (send) o de recepción (recv)
+ * están cerrado (sea por que se hizo un shutdown o por que el
+ * otro endpoint hizo un shutdown).
+ * */
+bool is_stream_send_closed() const;
+bool is_stream_recv_closed() const;
 
 /*
  * Cierra el socket. El cierre no implica un `shutdown`

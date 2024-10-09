@@ -77,8 +77,6 @@ HTTPProtocol::HTTPProtocol(
 }
 
 void HTTPProtocol::async_get(const std::string& resource) {
-    bool was_closed = false;
-
     /*
      * HTTP/1.1 es un protocolo de texto en donde el cliente (nosotros)
      * le hace un pedido a un servidor.
@@ -99,7 +97,7 @@ void HTTPProtocol::async_get(const std::string& resource) {
      * En C++ 20 podremos usar `view` para evitarnos una copia aquí.
      * */
     auto buf = request.str();
-    skt.sendall(buf.data(), buf.size(), &was_closed);
+    skt.sendall(buf.data(), buf.size());
 }
 
 std::string HTTPProtocol::wait_response(bool include_headers) {
@@ -116,7 +114,8 @@ std::string HTTPProtocol::wait_response(bool include_headers) {
     std::ostringstream partial;
     while (not was_closed) {
         char buf[512] = {0};
-        skt.recvsome(buf, sizeof(buf) - 1, &was_closed);
+        skt.recvsome(buf, sizeof(buf) - 1);
+        was_closed = skt.is_stream_recv_closed();
         if (was_closed)
             break;
 

@@ -26,7 +26,6 @@
  **/
 int main(int argc, char *argv[]) { try {
     int ret = -1;
-    bool was_closed = false;
 
     const char *servname = NULL;
 
@@ -67,7 +66,7 @@ int main(int argc, char *argv[]) { try {
      * */
 
     char buf[512];
-    while (not was_closed) {
+    while (true) {
         /*
          * Loop principal: lo que el servidor recibe lo vuelve a enviar
          * al cliente. Es un *echo* server después de todo!
@@ -87,14 +86,12 @@ int main(int argc, char *argv[]) { try {
          * pero usamos `sizeof(buf)-1` en el `Socket::recvsome`
          * de `cliente_http.cpp`?
          * */
-        int sz = peer.recvsome(buf, sizeof(buf), &was_closed);
-
-        if (was_closed)
+        int sz = peer.recvsome(buf, sizeof(buf));
+        if (peer.is_stream_recv_closed())
             break;
 
-        peer.sendall(buf, sz, &was_closed);
-
-        if (was_closed)
+        peer.sendall(buf, sz);
+        if (peer.is_stream_send_closed())
             break;
     }
 
