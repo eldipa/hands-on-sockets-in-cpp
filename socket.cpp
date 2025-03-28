@@ -245,6 +245,7 @@ Socket& Socket::operator=(Socket&& other) {
     /* Ahora hacemos los mismos pasos que en el move constructor */
     this->skt = other.skt;
     this->closed = other.closed;
+    this->stream_status = other.stream_status;
     other.skt = -1;
     other.closed = true;
     other.stream_status = STREAM_BOTH_CLOSED;
