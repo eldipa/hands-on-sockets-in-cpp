@@ -206,7 +206,7 @@ Socket::Socket(Socket&& other) {
     /* Nos copiamos del otro socket... */
     this->skt = other.skt;
     this->closed = other.closed;
-    this->stream_status = other.closed;
+    this->stream_status = other.stream_status;
 
     /* ...pero luego le sacamos al otro socket
      * el ownership del recurso.
